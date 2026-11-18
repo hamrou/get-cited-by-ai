@@ -1,7 +1,10 @@
 # Measuring AI discovery
 
 All referrer-based numbers are a floor: assistant apps (ChatGPT mobile, Claude
-desktop) often send no referrer and land in Direct.
+desktop) often send no referrer and land in Direct, and GA only sees visitors
+who accepted the consent banner (often 30–70% in the EU). Server access logs
+see everyone: count `Referer` hosts and `utm_source=chatgpt.com` there for the
+real volume, and use GA for behaviour and conversions.
 
 ## GA4: an "AI assistants" channel
 
@@ -20,6 +23,16 @@ purchase) and compare its rate for AI traffic with organic search.
 
 Without GA: the same regex over the server's Referer logs, plus
 `utm_source=chatgpt.com` in the query string.
+
+## Which pages AI sends people to
+
+GA4 → Reports → Engagement → Landing page, add a filter *Session default
+channel group* = AI assistants (or *Session source* matches the regex above),
+then add the key-event and revenue columns. Or Explore → Free form: rows
+*Landing page + query string*, *Session source*; values *Sessions*, *Average
+engagement time per session*, *Key events*, *Total revenue*; filter the source
+regex; last 28–90 days. Long engagement with zero key events = the page answers
+the question but offers no next step for it (Step 7 of the skill).
 
 ## Bing Webmaster Tools → AI Performance
 

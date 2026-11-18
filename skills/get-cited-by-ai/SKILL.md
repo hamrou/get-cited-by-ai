@@ -60,13 +60,44 @@ Write `ai-visibility/brief.md`:
 
 ## Step 1: baseline
 
-1. Run `audit.py` on the live site and save the report.
-2. Ask the user to run 10 of the prompts in ChatGPT (search on), Perplexity,
-   Gemini/AI Mode and Claude, and paste or screenshot the answers. Do not
-   automate logged-in assistant sessions. Record per prompt: mentioned?,
-   cited (linked)?, which competitors, which sources were cited. That source
-   list is the off-site target list for Step 5.
-3. Note current AI referral traffic (see `references/measure.md`).
+1. Run `audit.py` on the live site and save the report. Its `index` lines say
+   whether Bing/Google verification is visible; with `BING_WEBMASTER_API_KEY`
+   set it also asks Bing whether the home page is indexed.
+2. **The prompt panel**: write the prompt set to `ai-visibility/prompts.txt`
+   (one per line) and run the panel through the engines' official APIs:
+
+   ```bash
+   python "<this skill's folder>/scripts/panel.py" ai-visibility/prompts.txt      --brand "Name" --domain example.com --competitors "A,B,C" --out ai-visibility/panel
+   ```
+
+   Run the dry run yourself, right away, without asking: without `--yes` it
+   calls no API and costs nothing. It prints which
+   engines have a key in the environment and the cost estimate (about
+   $0.01–0.04 per prompt per engine). Ask the user with those concrete
+   numbers ("22 calls on OpenAI + Perplexity, at most $0.88: run it?"), not
+   "which keys do you have?". Never ask for key values in chat. If no key is
+   set in the environment, look for the project's own env files (`.env`,
+   `server/.env`) and pass them with `--env-file` (it reads only the four key
+   names, never prints values); otherwise the user sets them in their shell.
+   The user approves the billed run, not you. Only add
+   `--yes` after a yes: it bills the user's API keys
+   (OPENAI_API_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY;
+   engines without a key are skipped). It writes `panel-<date>.md/.json`:
+   mention and link rates per engine, competitors named, and the most cited
+   sources, which is the off-site target list for Step 5.
+   If the user has no API keys, ask them to run 10 prompts by hand in ChatGPT
+   (search on), Perplexity, Gemini and Claude and paste the answers. Either
+   way, never automate logged-in consumer sessions. API answers are a proxy
+   for the apps; a few manual spot checks keep it honest.
+3. Note current AI referral traffic and **the pages AI sends people to**, with
+   their conversion rate (see `references/measure.md`). Few sessions is a hint,
+   not a ranking: say so. GA only counts visitors who accepted the consent
+   banner; if the server keeps access logs, count AI referrers there too.
+4. Before calling a missing Bing verification "the gap", confirm it: ask the
+   user whether the site is in Bing Webmaster Tools (a DNS CNAME verification
+   is invisible to the audit) or open the `site:` link the audit prints, and
+   compare Bing's result count with the sitemap count: "indexed" is not
+   enough if Bing knows 50 of 212 pages.
 
 ## Step 2: reach (fix every FAIL first)
 
@@ -165,12 +196,43 @@ options) at sign-up or checkout, and carry the source into the conversion event.
 audit and the prompt panel after 4–6 weeks; retrieval engines move in days to
 weeks, model knowledge only with new training cycles.
 
+**Re-check dates**: don't leave them in a file for the user to remember. If the
+harness can schedule work (Claude Code: `/schedule` creates a scheduled agent;
+other agents: cron or the CI scheduler), offer to schedule the Bing indexed-count
+check (1–2 weeks after verification) and the audit + panel re-run (4–6 weeks).
+A scheduled panel run spends money: put the approved cap in the scheduled
+prompt, and have it stop and report if the dry run is above the cap.
+
+## Step 7: convert the visitors AI sends
+
+A cited page that loses the visitor wastes the citation. For each page the
+AI channel lands on (Step 1, item 3), check it against the question that sent
+the visitor there (the prompt set says what they asked):
+
+- **The first screen confirms the answer** they were promised: same words as
+  the question, what it costs, who it's for. No generic hero.
+- **One next step that continues that question**, not the site's default CTA.
+  A reader of "how to start a mobile grooming business" gets the grooming course
+  and its price, or the free practice test; not a newsletter box.
+- **Value before a wall**: a free tool, sample, calculator, demo or practice
+  test reachable without sign-up. AI visitors arrive mid-research and leave
+  when asked to commit first.
+- **Proof near the step**: real numbers, real reviews with sources, refund or
+  trial terms. No invented testimonials.
+- **Fast on mobile** (assistant apps open links in an in-app browser), and the
+  AI source carried into the sign-up and purchase events (`references/measure.md`).
+
+Report per page: AI sessions, engagement, key events before and after. With
+under ~30 AI sessions a month, judge changes on all organic visitors to the
+page and treat the AI numbers as direction only.
+
 ## Output
 
 `ai-visibility/brief.md`, `ai-visibility/audit.md` (before and after),
 `ai-visibility/plan.md` (fixes ranked: reach → readable → quotable → off-site,
 each with owner: code / user / third party), the code changes, and
-`ai-visibility/panel.md` (prompt results by date). End with the 3 user-only tasks
+`ai-visibility/panel-<date>.md` (prompt results by date), and the AI landing
+pages with the Step 7 fixes. End with the 3 user-only tasks
 (webmaster verification, CDN bot setting, listings) and a date to re-check.
 
 ## Rules

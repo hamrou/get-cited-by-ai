@@ -11,6 +11,8 @@ It reads public pages only, one request at a time, like a polite crawler.
 import argparse
 import gzip
 import json
+import os
+import time
 import re
 import sys
 import urllib.error
@@ -202,6 +204,45 @@ def audit_sitemap(base, listed):
     return urls
 
 
+def audit_index(base, n_sitemap=0):
+    """Search-index readiness: ChatGPT search and Copilot retrieve through Bing,
+    AI Overviews through Google. Looks for public evidence of webmaster
+    verification; the index itself is only visible inside the webmaster tools."""
+    host = urlparse(base).netloc
+    st, _, html, _ = fetch(base)
+    p = Page()
+    try: p.feed(html)
+    except Exception: pass
+    bing = "msvalidate.01" in p.meta
+    google = "google-site-verification" in p.meta
+    st2, _, body2, _ = fetch(urljoin(base, "/BingSiteAuth.xml"))
+    if st2 == 200 and "<users>" in body2.lower(): bing = True
+    txt = []
+    for name in {host, host[4:] if host.startswith("www.") else host}:
+        try:
+            dst, _, dbody, _ = fetch(f"https://dns.google/resolve?name={name}&type=TXT")
+            txt += [a.get("data", "") for a in json.loads(dbody).get("Answer", [])] if dst == 200 else []
+        except Exception: pass
+    if any("google-site-verification" in t for t in txt): google = True
+    if any("ms=" in t.lower() or "msvalidate" in t.lower() for t in txt): bing = True
+    key = os.environ.get("BING_WEBMASTER_API_KEY")
+    if key:
+        try:
+            from urllib.parse import quote
+            ist, _, ibody, _ = fetch(f"https://ssl.bing.com/webmaster/api.svc/json/GetUrlInfo?apikey={key}&siteUrl={quote(base + '/')}&url={quote(base + '/')}")
+            info = json.loads(ibody).get("d") if ist == 200 else None
+            if info: add("PASS", "index", f"Bing Webmaster API: home page known to Bing (last crawled {info.get('LastCrawledDate', '?')})"); bing = True
+            else: add("WARN", "index", f"Bing Webmaster API: no data for the home page (HTTP {ist}); is the site added and verified?")
+        except Exception as e:
+            add("INFO", "index", f"Bing Webmaster API check failed: {e}")
+    if bing: add("PASS", "index", "Bing Webmaster verification found (meta tag, BingSiteAuth.xml or DNS)")
+    else: add("WARN", "index", "no Bing Webmaster verification visible (meta msvalidate.01, /BingSiteAuth.xml or DNS). ChatGPT search and Copilot retrieve through Bing: verify the site at bing.com/webmasters (import from Google Search Console is quickest; a DNS CNAME verification is invisible to this check) and submit the sitemap")
+    if google: add("PASS", "index", "Google Search Console verification found")
+    else: add("INFO", "index", "no Google Search Console verification visible (it may be a DNS record on another name or a GA/GTM verification)")
+    add("INFO", "index", f"manual check: https://www.bing.com/search?q=site%3A{host} and https://www.google.com/search?q=site%3A{host}; "
+        + (f"compare the result count with the {n_sitemap} sitemap URLs: well under half means pages are missing from the index (verify, submit the sitemap, add IndexNow)" if n_sitemap else "0 results = not indexed"))
+
+
 def audit_llms(base):
     st, h, body, _ = fetch(urljoin(base, "/llms.txt"))
     ct = (h.get("Content-Type") or h.get("content-type") or "").lower()
@@ -214,7 +255,7 @@ def audit_llms(base):
         add("PASS" if ok else "WARN", "llms.txt", f"/llms.txt is text ({len(body)} chars){'' if ok else '; spec: start with an H1 \"# Name\" then a \"> summary\" line'}")
 
 
-def audit_page(url):
+def audit_page(url, bots=True):
     st, h, html, final = fetch(url)
     area = urlparse(url).path or "/"
     if st != 200:
@@ -258,7 +299,7 @@ def audit_page(url):
     if not re.search(r"\b(20\d\d)\b", " ".join(p.text)) and "article:modified_time" not in p.meta and "dateModified" not in html:
         add("INFO", area, "no visible date or dateModified; fresh, dated pages are favoured for time-sensitive questions")
     # Same page as each AI bot: blocked by a firewall / bot protection?
-    for name, ua in UA_BOTS.items():
+    for name, ua in (UA_BOTS.items() if bots else ()):
         bst, _, bhtml, _ = fetch(url, ua=ua)
         if bst != 200:
             add("FAIL", area, f"{name} user agent gets HTTP {bst} (firewall, CDN bot protection or WAF?)")
@@ -271,19 +312,25 @@ def main():
     ap.add_argument("urls", nargs="+")
     ap.add_argument("--out")
     ap.add_argument("--sample", type=int, default=5, help="sitemap pages to audit when only the home URL is given")
+    ap.add_argument("--all", action="store_true", help="audit every sitemap URL (titles, headings, words); bot user-agent checks stay on the first 5 pages")
     a = ap.parse_args()
     base = "{0.scheme}://{0.netloc}".format(urlparse(a.urls[0]))
     sitemaps, _ = audit_robots(base)
     sm_urls = audit_sitemap(base, sitemaps)
     audit_llms(base)
+    audit_index(base, len(sm_urls))
     norm = lambda u: u.rstrip("/") or u
     pages = list(dict.fromkeys(a.urls))
-    if len(pages) == 1 and sm_urls:
+    if a.all and sm_urls:
+        have = {norm(u) for u in pages}
+        pages += [u for u in sm_urls if norm(u) not in have]
+    elif len(pages) == 1 and sm_urls:
         step = max(1, len(sm_urls) // a.sample)
         have = {norm(u) for u in pages}
         pages += [u for u in sm_urls[::step] if norm(u) not in have][: a.sample]
-    for u in pages:
-        audit_page(u)
+    for i, u in enumerate(pages):
+        audit_page(u, bots=i < 5)
+        if a.all: time.sleep(0.3)  # polite crawl
     order = {"FAIL": 0, "WARN": 1, "INFO": 2, "PASS": 3}
     counts = {k: sum(1 for r in results if r[0] == k) for k in order}
     lines = [f"# AI visibility audit: {base}", "",

@@ -23,11 +23,12 @@ Sources with links: [`skills/get-cited-by-ai/references/evidence.md`](skills/get
 ## What it does
 
 1. **Brief**: what you are, the 15–30 questions buyers ask assistants, the competitors that get named today.
-2. **Baseline**: runs the audit script and records what ChatGPT, Perplexity, Gemini and Claude answer now.
+2. **Baseline**: runs the audit script and the prompt panel (what ChatGPT, Perplexity, Gemini and Claude answer now, via their APIs).
 3. **Reach**: robots.txt for every AI bot, Cloudflare / WAF bot blocking, Search Console + Bing Webmaster, sitemap with real `lastmod`, IndexNow.
 4. **Readable**: makes key pages readable without JavaScript, with a recipe for each stack (Next.js, Nuxt, Astro, Vite/React SPA, Express, Django, Rails, WordPress, Shopify, static sites, mobile apps, local businesses).
 5. **Quotable**: one page per question, written so an answer engine can lift a passage: answer first, facts, tables, dates, translations.
 6. **Mentions and measurement**: an honest off-site plan (directories, Reddit, YouTube, roundups, Wikidata), AI-traffic tracking in GA4, Bing's AI Performance report, a monthly prompt panel, and **which AI sent each visitor** (referrer + UTM detection, a "How did you find us?" question, sign-ups and sales per assistant).
+7. **Convert**: finds the pages AI actually sends visitors to and fixes each one: the answer they were promised on the first screen, a next step that continues their question, value before any sign-up wall.
 
 ## The audit script
 
@@ -53,7 +54,19 @@ It checks:
 - `noindex` / `nosnippet`;
 - title, h1/h2, canonical, hreflang, Open Graph and JSON-LD validity;
 - the **sitemap**, its index and whether `lastmod` dates are real;
-- whether **`/llms.txt` is real text or an SPA fallback**.
+- whether **`/llms.txt` is real text or an SPA fallback**;
+- whether there is **visible Bing / Google webmaster verification** (ChatGPT search and Copilot pull from Bing). With `BING_WEBMASTER_API_KEY` set, it also asks Bing whether the home page is indexed.
+
+## The prompt panel
+
+Asks your buyer questions to ChatGPT, Perplexity, Claude and Gemini through their official APIs with web search on, then scores the answers. It only runs with your own API keys and starts with a dry run that shows the cost:
+
+```bash
+python skills/get-cited-by-ai/scripts/panel.py prompts.txt --brand "Acme" --domain acme.com --competitors "Foo,Bar"
+# 12 prompts × 4 engines = 48 calls, est. ≤ $1.44   → add --yes to run
+```
+
+Output: mention and link rate per engine, average link position, competitors named, and **the sources each engine cites**, which is the list of sites where you need to be mentioned.
 
 ## Install
 
