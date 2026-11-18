@@ -158,7 +158,10 @@ category ever is.
 ## Step 6: measure and repeat
 
 Set up what `references/measure.md` describes (GA4 AI channel, Bing AI
-Performance report, server-log bot hits, the monthly prompt panel). Re-run the
+Performance report, server-log bot hits, the monthly prompt panel), plus
+**which AI sent each visitor**: classify the referrer/UTM on landing, ask
+"How did you find us?" (with ChatGPT, Claude, Perplexity, Gemini, Copilot as
+options) at sign-up or checkout, and carry the source into the conversion event. Re-run the
 audit and the prompt panel after 4–6 weeks; retrieval engines move in days to
 weeks, model knowledge only with new training cycles.
 
