@@ -7,6 +7,7 @@ Usage:
     python panel.py prompts.txt --brand "PetCred" --domain cred.pet \
         [--competitors "Rover,Wag"] [--engines openai,perplexity,anthropic,gemini] \
         [--runs 1] [--out ai-visibility/panel] [--yes]
+    python panel.py --keys [--env-file .env]     # which engines have a key (free)
 
 prompts.txt: one prompt per line (blank lines and lines starting with # are skipped).
 Keys come from the environment: OPENAI_API_KEY, PERPLEXITY_API_KEY,
@@ -37,6 +38,12 @@ ENGINES = {
     "perplexity": (("PERPLEXITY_API_KEY",), "sonar", 0.01),
     "anthropic": (("ANTHROPIC_API_KEY",), "claude-haiku-5-5", 0.04),
     "gemini": (("GEMINI_API_KEY", "GOOGLE_API_KEY"), "gemini-2.5-flash", 0.04),
+}
+KEY_PAGES = {  # where the user creates each key
+    "openai": "https://platform.openai.com/api-keys",
+    "perplexity": "https://www.perplexity.ai/account/api",
+    "anthropic": "https://console.anthropic.com/settings/keys",
+    "gemini": "https://aistudio.google.com/apikey",
 }
 BASE = {  # overridable for testing / proxies
     "openai": os.environ.get("OPENAI_BASE_URL", "https://api.openai.com"),
@@ -188,8 +195,9 @@ def score(text, sources, brand, domain, competitors):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("prompts")
-    ap.add_argument("--brand", required=True)
+    ap.add_argument("prompts", nargs="?")
+    ap.add_argument("--brand", default="")
+    ap.add_argument("--keys", action="store_true", help="only list which engines have an API key and where to get the missing ones (no call, no cost, values never printed)")
     ap.add_argument("--domain", default="")
     ap.add_argument("--competitors", default="")
     ap.add_argument("--engines", default=",".join(ENGINES))
@@ -210,6 +218,18 @@ def main():
                     os.environ[k] = v.strip().strip('"').strip("'")
         except OSError as e:
             print(f"--env-file {path}: {e}")
+
+    if a.keys:
+        have = [e for e in ENGINES if key_for(e)]
+        print(f"Keys found: {', '.join(have) or 'none'}")
+        for e in ENGINES:
+            if e not in have:
+                print(f"Missing: {e}. Add {ENGINES[e][0][0]}=<key> to the project's env file (create the key at {KEY_PAGES[e]}); about ${ENGINES[e][2]:.2f} per question")
+        if len(have) < len(ENGINES):
+            print("Never paste a key in chat, and keep the env file out of git.")
+        return 0
+    if not a.prompts or not a.brand:
+        ap.error("prompts and --brand are required (or use --keys)")
 
     prompts = [l.strip() for l in open(a.prompts, encoding="utf-8") if l.strip() and not l.lstrip().startswith("#")]
     wanted = [e.strip() for e in a.engines.split(",") if e.strip()]

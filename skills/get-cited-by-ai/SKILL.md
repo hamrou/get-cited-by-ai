@@ -52,6 +52,29 @@ competitors, the price). One question is always asked, because the audit can't
 see a DNS verification: "Is the site already added in Bing Webmaster Tools and
 Google Search Console?"
 
+**Ask for the AI keys first.** The panel can only measure the engines it has
+a key for, and a baseline on one engine out of four is a weak baseline. Before
+anything else, run (free, no call, values never printed; pass every env file
+the project has):
+
+```bash
+python "<this skill's folder>/scripts/panel.py" --keys --env-file .env
+```
+
+If an engine is missing, the first message to the user asks for it, in the
+same message as the intake questions, with the lines it printed:
+
+> The panel can ask ChatGPT, Perplexity, Claude and Gemini. I found a key for
+> OpenAI only. To measure the other three, add these lines to `shop/.env`
+> (never paste a key in chat): `PERPLEXITY_API_KEY=…` (create it at …),
+> `ANTHROPIC_API_KEY=…`, `GEMINI_API_KEY=…`. A 24-question baseline costs
+> about $0.25 to $1 per engine. Reply "keys added", or "continue" to measure
+> OpenAI only.
+
+Check that the env file is in `.gitignore` before pointing the user at it.
+Don't wait for the answer: go on with the audit and the code. Run `--keys`
+again before the panel's dry run, so keys added meanwhile are counted.
+
 Write `ai-visibility/brief.md`:
 
 - **The entity**: name, one-line category ("the real-life politics simulator"),
@@ -70,7 +93,9 @@ Write `ai-visibility/brief.md`:
 
 The baseline is the "before" picture. Run the audit and the prompt panel
 **before any on-site change is deployed**: a panel run after the deploy can't
-show what the changes did. Writing the code first is fine, deploying it is not.
+show what the changes did. Holding the deploy never means holding the work:
+write every code fix in the same session (IndexNow, the attribution, the pages)
+and mark it `ready`.
 
 1. Run `audit.py` on the live site and save the report. Its `index` lines say
    whether Bing/Google verification is visible; with `BING_WEBMASTER_API_KEY`
@@ -134,10 +159,12 @@ show what the changes did. Writing the code first is fine, deploying it is not.
   pass it and still block, or block it and still pass the real bot: confirm in
   the CDN's bot/firewall logs.
 - **Index (user task)**: verify the site in Google Search Console and Bing
-  Webmaster Tools (DNS TXT) and submit the sitemap.
+  Webmaster Tools (DNS TXT) and submit the sitemap. With a browser tool, do it
+  with them (see "Doing the user's tasks in their browser").
 - **IndexNow (code task, yours)**: add the key file at the root and a ping to
   api.indexnow.org on deploy or publish, in the same change as the other
-  fixes. Recipe: `references/stacks.md`.
+  fixes. Ping only the URLs that changed in that deploy (all of them on the
+  first one only). Recipe: `references/stacks.md`.
 - **Sitemap**: every public page, real per-page `<lastmod>`, hreflang for
   translations, an index if there are several. Advertise it in robots.txt.
 
@@ -269,6 +296,25 @@ Report per page: AI sessions, engagement, key events before and after. With
 under ~30 AI sessions a month, judge changes on all organic visitors to the
 page and treat the AI numbers as direction only.
 
+## Doing the user's tasks in their browser
+
+After a run, most of what is left sits in the user's accounts: Bing Webmaster
+Tools, Search Console, the Business Profile, analytics, the CDN. A list of
+chores is where the work stalls. If a browser tool is available (Claude in
+Chrome, a browser MCP, computer use), offer to do those tasks in the user's
+own browser, and say so in the Next steps: "reply 'open Bing' and log in when
+the page opens; I do the rest". Without a browser tool, give the exact steps.
+Per-task steps: `references/browser.md`.
+
+- **The user logs in.** Stop at every login, 2FA, captcha or payment page and
+  hand over. Never ask for, read or type a password.
+- **Reading needs no extra yes**: indexed counts, reports, current settings.
+  Write each value with its date in `plan.md`.
+- **Before anything that submits, creates, publishes or changes a setting**,
+  show exactly what will be sent and wait for a yes, once per item.
+- **Never by browser**: reviews, posts or comments in the user's name (draft
+  the text, they post it), purchases, and the consumer AI apps for the panel.
+
 ## Output
 
 `ai-visibility/brief.md`, `ai-visibility/audit.md` (before and after),
@@ -276,13 +322,46 @@ page and treat the AI numbers as direction only.
 each with owner: code / user / third party), the code changes, and
 `ai-visibility/panel-<date>.md` (prompt results by date), and the AI landing
 pages with the Step 7 fixes, and `ai-visibility/facts-needed.md` when facts
-are missing. End with the user-only tasks (webmaster verification, CDN bot
-setting, listings) and a date to re-check.
+are missing.
 
-**The final message ends with this table** (REQUIRED, every row, also in
-`plan.md`). Status is one of: `done`, `skipped` (with the reason), `blocked`
-(with what the user must send or do), `not needed` (with the audit line that
-shows it).
+**The final message has these four parts, in this order** (REQUIRED):
+
+1. **The state**, in one or two sentences: what is done, what is waiting, and
+   whether anything was deployed or billed.
+2. **Next steps**: a numbered list in the order things must happen, at most 7
+   steps. Every line starts with who acts (`You:` or `Me:`). A `You:` line
+   gives the exact words to reply, or the file to fill in, and what it costs.
+   A `Me:` line says what that reply starts. Every `ready` and `blocked` row
+   of the table is released by one of these lines. A question still open
+   from Step 0 (the missing AI keys, Bing, the competitors) is a `You:` line here, not a separate
+   list. The re-check date is the last line.
+
+   ```
+   1. You: reply "run the panel" (48 calls on OpenAI, at most $1.44).
+      Me: run it and show who the assistants name instead of you.
+   2. You: reply "deploy".
+      Me: deploy the 3 ready fixes (IndexNow, home title, attribution), then
+      re-run the audit with --compare.
+   3. You: reply "open Bing" and log in when the page opens.
+      Me: import the site from Search Console, submit the sitemap and read
+      how many of the 1,415 pages Bing has indexed.
+   4. You: fill in ai-visibility/facts-needed.md (5 lines).
+      Me: write the "alternatives" page.
+   5. You: reply "schedule" for a free reminder on 2026-12-18 to re-run the
+      audit and the panel.
+   ```
+3. **What the audit found**, briefly: the passes in one line, each warning in
+   one line.
+4. **The step table**, every row, also in `plan.md`. One status per row: a
+   row that is part written and part waiting for the user is `blocked`, and
+   says which part is ready. Status is one of:
+   - `done`: complete, and nothing is left for anyone;
+   - `ready`: written, waiting for a deploy; name the Next step that ships it;
+   - `blocked`: waiting for the user; name the Next step that unblocks it;
+   - `not needed`: with the audit line that shows it;
+   - `skipped`: only when the user said no or it can't be done here, and say
+     which. "Not yet", "held" and "low priority" are not reasons: do the work
+     and mark it `ready`.
 
 | step | status | what was done, or why not |
 | --- | --- | --- |
@@ -309,5 +388,6 @@ shows it).
   get the site demoted, and it damages trust when found.
 - Comparison pages are fair and dated; never invent a competitor's weakness.
 - Never claim a result is guaranteed; report the numbers.
-- Accounts, DNS, CDN and webmaster settings are the user's to change; give exact
-  steps.
+- Accounts, DNS, CDN and webmaster settings are the user's. Change them only in
+  the user's own browser, logged in by them, with a yes per change; otherwise
+  give exact steps.

@@ -1,6 +1,6 @@
 {
   "name": "get-cited-by-ai",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Get your site, app or business found and cited by ChatGPT, Claude, Perplexity, Gemini, Copilot and Google AI Overviews. Evidence-based GEO / AI SEO: AI-crawler audit, fixes ranked by what studies show actually works.",
   "author": { "name": "hamrou", "url": "https://github.com/hamrou" },
   "homepage": "https://github.com/hamrou/get-cited-by-ai",

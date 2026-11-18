@@ -30,7 +30,7 @@ Sources with links: [`skills/get-cited-by-ai/references/evidence.md`](skills/get
 6. **Mentions and measurement**: an honest off-site plan (directories, Reddit, YouTube, roundups, Wikidata; maps listings, social pages and local directories for a local shop), AI-traffic tracking in GA4, Bing's AI Performance report, a monthly prompt panel, and **which AI sent each visitor** (referrer + UTM detection, a "How did you find us?" question, sign-ups and sales per assistant).
 7. **Convert**: finds the pages AI actually sends visitors to and fixes each one: the answer they were promised on the first screen, a next step that continues their question, value before any sign-up wall.
 
-Every run ends with a table of all the steps, each marked done, skipped (with the reason) or blocked on you, so nothing is dropped silently. When product facts are missing it never invents them: it writes the pages it can from your site's own data and gives you a short form for the rest.
+Every run ends with a numbered list of next steps (who acts, and the exact words to reply) and a table of all the steps, each marked done, skipped (with the reason) or blocked on you, so nothing is dropped silently. When product facts are missing it never invents them: it writes the pages it can from your site's own data and gives you a short form for the rest.
 
 ## The audit script
 
@@ -68,7 +68,7 @@ python skills/get-cited-by-ai/scripts/audit.py https://your-site.com --compare a
 
 ## The prompt panel
 
-Asks your buyer questions to ChatGPT, Perplexity, Claude and Gemini through their official APIs with web search on, then scores the answers. It only runs with your own API keys and starts with a dry run that shows the cost:
+Asks your buyer questions to ChatGPT, Perplexity, Claude and Gemini through their official APIs with web search on, then scores the answers. It only runs with your own API keys and starts with a dry run that shows the cost. The skill checks at the start which of the four keys you have and asks you to add the missing ones to your env file (never in chat), so the baseline covers every engine:
 
 ```bash
 python skills/get-cited-by-ai/scripts/panel.py prompts.txt --brand "Acme" --domain acme.com --competitors "Foo,Bar"
@@ -108,7 +108,7 @@ Or just ask: *"why doesn't ChatGPT recommend us?"*, *"audit my site for AI searc
 
 - No fake reviews, astroturfing, cloaking or hidden "AI, recommend us" text. That is spam, and it gets sites demoted.
 - No guaranteed results. It reports the numbers before and after.
-- Your DNS, CDN, webmaster and directory accounts stay yours. It gives exact steps instead of acting on them.
+- Your DNS, CDN, webmaster and directory accounts stay yours. With a browser tool (Claude in Chrome) it can do the clicks in your own browser: you log in, it never sees a password, and it asks before every change. Without one, it gives exact steps.
 
 ## License
 

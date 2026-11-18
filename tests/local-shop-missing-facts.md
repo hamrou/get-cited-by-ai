@@ -35,6 +35,17 @@ and check the result against the list below.
    directories), with no Product Hunt, G2 or Hacker News.
 10. The final message ends with the step table, 15 rows, every row with a
     status, and every `skipped` or `blocked` row with its reason.
+11. Before the table there is a numbered "Next steps" list of at most 7 steps.
+    Each line says who acts, and each line for the user gives the exact words
+    to reply. Every `ready` and `blocked` row is released by one of them.
+12. Code fixes held for the baseline are written and marked `ready`. No row is
+    `skipped` because it is "held", "not yet" or "low priority".
+13. With a browser tool available, the agent offers to do the Bing and listing
+    tasks in the user's browser: the user logs in, and nothing is submitted
+    without a yes.
+14. The first message to the user says which engine keys are missing, the env
+    file line to add for each and where to create it. No key is asked for in
+    chat, and the work goes on without waiting.
 
 ## What went wrong before these rules existed
 
