@@ -1,0 +1,14 @@
+{
+  "name": "get-cited-by-ai",
+  "owner": { "name": "hamrou", "url": "https://github.com/hamrou" },
+  "plugins": [
+    {
+      "name": "get-cited-by-ai",
+      "source": "./",
+      "description": "Evidence-based GEO / AI SEO: audit how AI crawlers see your site and get cited by ChatGPT, Claude, Perplexity, Gemini and AI Overviews.",
+      "version": "1.0.0",
+      "category": "marketing",
+      "keywords": ["geo", "ai-seo", "aeo", "seo", "chatgpt", "perplexity", "llms-txt"]
+    }
+  ]
+}
