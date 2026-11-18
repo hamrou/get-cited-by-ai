@@ -200,8 +200,11 @@ weeks, model knowledge only with new training cycles.
 harness can schedule work (Claude Code: `/schedule` creates a scheduled agent;
 other agents: cron or the CI scheduler), offer to schedule the Bing indexed-count
 check (1–2 weeks after verification) and the audit + panel re-run (4–6 weeks).
-A scheduled panel run spends money: put the approved cap in the scheduled
-prompt, and have it stop and report if the dry run is above the cap.
+Cloud routines run on a fresh checkout: they can't read local `.env` files or
+untracked files, and a spending cap in the prompt is only an instruction. So
+by default schedule **reminder-only** routines (they say what to run and the
+last baseline; no API keys, no spend), and run the billed panel locally in a
+session when the reminder comes. Never put an API key in a scheduled prompt.
 
 ## Step 7: convert the visitors AI sends
 
