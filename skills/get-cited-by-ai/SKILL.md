@@ -18,7 +18,9 @@ python "<this skill's folder>/scripts/audit.py" https://example.com --out ai-aud
 It checks robots.txt for each AI bot, whether AI user agents get blocked by a
 firewall, how many words are readable **without JavaScript**, title, h1/h2,
 canonical, hreflang, Open Graph, JSON-LD, sitemap and lastmod, and llms.txt. It
-samples 5 sitemap pages (`--sample N`) or audits the URLs you pass.
+samples 5 sitemap pages (`--sample N`) or audits the URLs you pass. After the
+fixes are live, re-run it with `--compare <the baseline report>`: it lists what
+was fixed, what is new and what remains.
 
 ## What the evidence says (set expectations with the user)
 
@@ -45,8 +47,10 @@ and count the words outside `<script>`.
 ## Step 0: intake
 
 Fill what you can from the repo and the live site; ask the user only for what is
-missing, at most 3 questions in one message (usually: the prompt set, the
-competitors, the price).
+missing, at most 4 questions in one message (usually: the prompt set, the
+competitors, the price). One question is always asked, because the audit can't
+see a DNS verification: "Is the site already added in Bing Webmaster Tools and
+Google Search Console?"
 
 Write `ai-visibility/brief.md`:
 
@@ -55,10 +59,18 @@ Write `ai-visibility/brief.md`:
 - **The prompt set**: 15–30 questions a buyer would type into an assistant, in
   their words and languages: category ("best X for Y"), comparison ("X vs Y",
   "alternatives to Y"), problem ("how do I …"), and brand ("is X legit", "X price").
+  Write them in the language the buyers type in (the site's `<html lang>`
+  unless the user says otherwise): a French shop gets French prompts. A local
+  business gets its city or country in the category prompts ("meilleur
+  shampoing naturel à Libreville").
 - **Competitors** the assistant names today for those prompts.
 - **The stack** (read the repo: framework, SSR or SPA, hosting/CDN, i18n).
 
 ## Step 1: baseline
+
+The baseline is the "before" picture. Run the audit and the prompt panel
+**before any on-site change is deployed**: a panel run after the deploy can't
+show what the changes did. Writing the code first is fine, deploying it is not.
 
 1. Run `audit.py` on the live site and save the report. Its `index` lines say
    whether Bing/Google verification is visible; with `BING_WEBMASTER_API_KEY`
@@ -79,6 +91,10 @@ Write `ai-visibility/brief.md`:
    set in the environment, look for the project's own env files (`.env`,
    `server/.env`) and pass them with `--env-file` (it reads only the four key
    names, never prints values); otherwise the user sets them in their shell.
+   Answers vary from run to run, so the dry run also prints the cost of
+   `--runs 2` and `--runs 3`: recommend `--runs 2` for the baseline when the
+   total stays under about $5. If the dry run warns that the prompts are in
+   another language than the site, fix `prompts.txt` before asking.
    The user approves the billed run, not you. Only add
    `--yes` after a yes: it bills the user's API keys
    (OPENAI_API_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY;
@@ -93,11 +109,12 @@ Write `ai-visibility/brief.md`:
    their conversion rate (see `references/measure.md`). Few sessions is a hint,
    not a ranking: say so. GA only counts visitors who accepted the consent
    banner; if the server keeps access logs, count AI referrers there too.
-4. Before calling a missing Bing verification "the gap", confirm it: ask the
-   user whether the site is in Bing Webmaster Tools (a DNS CNAME verification
-   is invisible to the audit) or open the `site:` link the audit prints, and
-   compare Bing's result count with the sitemap count: "indexed" is not
-   enough if Bing knows 50 of 212 pages.
+4. "No Bing verification visible" in the audit is a question for the user, not
+   a finding: a DNS CNAME verification is invisible to the audit. Use the
+   Step 0 answer. Report it as a gap, or put "verify in Bing" on the user's
+   task list, only after the user says the site isn't there. Either way, open
+   the `site:` link the audit prints and compare Bing's result count with the
+   sitemap count: "indexed" is not enough if Bing knows 50 of 212 pages.
 
 ## Step 2: reach (fix every FAIL first)
 
@@ -116,9 +133,11 @@ Write `ai-visibility/brief.md`:
   sends bot user agents from a normal IP, so a CDN that verifies bot IPs may
   pass it and still block, or block it and still pass the real bot: confirm in
   the CDN's bot/firewall logs.
-- **Index**: verify the site in Google Search Console and Bing Webmaster Tools
-  (DNS TXT, the user does it), submit the sitemap, and add IndexNow pings on
-  publish/deploy (key file at the root + POST to api.indexnow.org).
+- **Index (user task)**: verify the site in Google Search Console and Bing
+  Webmaster Tools (DNS TXT) and submit the sitemap.
+- **IndexNow (code task, yours)**: add the key file at the root and a ping to
+  api.indexnow.org on deploy or publish, in the same change as the other
+  fixes. Recipe: `references/stacks.md`.
 - **Sitemap**: every public page, real per-page `<lastmod>`, hreflang for
   translations, an index if there are several. Advertise it in robots.txt.
 
@@ -132,6 +151,9 @@ pages that answer questions cannot. Same content for bots and people: never
 serve bots different text (cloaking).
 
 ## Step 4: quotable (pages that answer the prompt set)
+
+This step is the high-priority on-site work. The canonical, JSON-LD and
+llms.txt extras at the end of it don't replace it.
 
 Map every prompt in the brief to one page that answers it. The page set, by
 project type, is in `references/stacks.md`; most projects need: home (what it is,
@@ -160,6 +182,20 @@ Write each page so a passage can be lifted on its own:
   Article with dateModified), Open Graph, canonical, and an llms.txt generated from
   the same live facts (H1 name, `>` summary, links to the key pages).
 
+**When product facts are missing** (ingredients, specs, reviews), never invent
+them, and don't stop at the extras either. In the same session:
+
+1. Write the pages that need no new facts, from the repo and the live catalog:
+   how ordering works, delivery and pickup, prices, payment, returns, contact,
+   opening hours, the about page.
+2. Expand the content pages the audit marks thin from data the site already
+   has (the pickup points list, the catalog, the shipping rules). Legal pages
+   (terms, privacy) can stay short: the audit marks those INFO.
+3. Write `ai-visibility/facts-needed.md`: a short form the user fills in, one
+   line per fact, grouped by the page it unblocks ("Guide: which shampoo for
+   which hair type → needs: hair types per product, ingredients, scent").
+   Ask for reviews with their source (name or platform, date).
+
 ## Step 5: confirmed elsewhere (off-site)
 
 From the Step 1 source list, list where assistants already look for this
@@ -176,6 +212,10 @@ category, and plan presence there, honestly:
   own article (conflict of interest). A Wikidata item with official site and
   socials is fine when the entity is real and notable.
 - Consistent name, one-liner and links everywhere (sameAs in Organization JSON-LD).
+
+**A local shop or small store** doesn't belong on Product Hunt or G2. Its
+off-site list (maps listings, social pages, local directories and press) is in
+`references/stacks.md`, "Local shop or small store".
 
 **A new, unknown brand** has no third-party footprint, and that is the real
 bottleneck: on-site work makes it citable, mentions make it recommended. Plan
@@ -235,8 +275,32 @@ page and treat the AI numbers as direction only.
 `ai-visibility/plan.md` (fixes ranked: reach → readable → quotable → off-site,
 each with owner: code / user / third party), the code changes, and
 `ai-visibility/panel-<date>.md` (prompt results by date), and the AI landing
-pages with the Step 7 fixes. End with the 3 user-only tasks
-(webmaster verification, CDN bot setting, listings) and a date to re-check.
+pages with the Step 7 fixes, and `ai-visibility/facts-needed.md` when facts
+are missing. End with the user-only tasks (webmaster verification, CDN bot
+setting, listings) and a date to re-check.
+
+**The final message ends with this table** (REQUIRED, every row, also in
+`plan.md`). Status is one of: `done`, `skipped` (with the reason), `blocked`
+(with what the user must send or do), `not needed` (with the audit line that
+shows it).
+
+| step | status | what was done, or why not |
+| --- | --- | --- |
+| 0 brief and prompt set | | |
+| 1 audit baseline | | |
+| 1 prompt panel (before deploy) | | |
+| 1 AI traffic and landing pages baseline | | |
+| 2 robots.txt and CDN bot access | | |
+| 2 Bing / Google verification (user) | | |
+| 2 IndexNow ping (code) | | |
+| 2 sitemap | | |
+| 3 readable without JavaScript | | |
+| 4 pages that answer the prompts | | |
+| 4 cheap extras (canonical, JSON-LD, llms.txt) | | |
+| 5 off-site plan | | |
+| 6 measurement and AI attribution | | |
+| 6 re-check scheduled | | |
+| 7 AI landing pages convert | | |
 
 ## Rules
 

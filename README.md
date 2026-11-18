@@ -27,8 +27,10 @@ Sources with links: [`skills/get-cited-by-ai/references/evidence.md`](skills/get
 3. **Reach**: robots.txt for every AI bot, Cloudflare / WAF bot blocking, Search Console + Bing Webmaster, sitemap with real `lastmod`, IndexNow.
 4. **Readable**: makes key pages readable without JavaScript, with a recipe for each stack (Next.js, Nuxt, Astro, Vite/React SPA, Express, Django, Rails, WordPress, Shopify, static sites, mobile apps, local businesses).
 5. **Quotable**: one page per question, written so an answer engine can lift a passage: answer first, facts, tables, dates, translations.
-6. **Mentions and measurement**: an honest off-site plan (directories, Reddit, YouTube, roundups, Wikidata), AI-traffic tracking in GA4, Bing's AI Performance report, a monthly prompt panel, and **which AI sent each visitor** (referrer + UTM detection, a "How did you find us?" question, sign-ups and sales per assistant).
+6. **Mentions and measurement**: an honest off-site plan (directories, Reddit, YouTube, roundups, Wikidata; maps listings, social pages and local directories for a local shop), AI-traffic tracking in GA4, Bing's AI Performance report, a monthly prompt panel, and **which AI sent each visitor** (referrer + UTM detection, a "How did you find us?" question, sign-ups and sales per assistant).
 7. **Convert**: finds the pages AI actually sends visitors to and fixes each one: the answer they were promised on the first screen, a next step that continues their question, value before any sign-up wall.
+
+Every run ends with a table of all the steps, each marked done, skipped (with the reason) or blocked on you, so nothing is dropped silently. When product facts are missing it never invents them: it writes the pages it can from your site's own data and gives you a short form for the rest.
 
 ## The audit script
 
@@ -50,12 +52,19 @@ python skills/get-cited-by-ai/scripts/audit.py https://your-site.com --out ai-au
 It checks:
 - **robots.txt**, for each AI search, user and training bot;
 - whether **AI user agents get a 403 or a challenge page**;
-- the **word count without JavaScript**;
+- the **word count without JavaScript**, telling thin content pages (worth fixing) from short legal pages (fine);
 - `noindex` / `nosnippet`;
 - title, h1/h2, canonical, hreflang, Open Graph and JSON-LD validity;
 - the **sitemap**, its index and whether `lastmod` dates are real;
 - whether **`/llms.txt` is real text or an SPA fallback**;
 - whether there is **visible Bing / Google webmaster verification** (ChatGPT search and Copilot pull from Bing). With `BING_WEBMASTER_API_KEY` set, it also asks Bing whether the home page is indexed.
+
+After the fixes are live, run it again with `--compare` to see what changed:
+
+```bash
+python skills/get-cited-by-ai/scripts/audit.py https://your-site.com --compare ai-audit.md --out ai-audit-after.md
+# 6 fixed · 3 remaining · 1 new
+```
 
 ## The prompt panel
 
@@ -65,6 +74,8 @@ Asks your buyer questions to ChatGPT, Perplexity, Claude and Gemini through thei
 python skills/get-cited-by-ai/scripts/panel.py prompts.txt --brand "Acme" --domain acme.com --competitors "Foo,Bar"
 # 12 prompts × 4 engines = 48 calls, est. ≤ $1.44   → add --yes to run
 ```
+
+The dry run also shows the cost of repeating each prompt (`--runs 2`, answers vary from run to run) and warns when the prompts are in a different language from the site.
 
 Output: mention and link rate per engine, average link position, competitors named, and **the sources each engine cites**, which is the list of sites where you need to be mentioned.
 

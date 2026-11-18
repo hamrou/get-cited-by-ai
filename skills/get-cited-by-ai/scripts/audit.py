@@ -3,6 +3,7 @@
 
 Usage:
     python audit.py https://example.com [more page URLs on the same site] [--out report.md]
+    python audit.py https://example.com --compare baseline.md --out after.md
 
 Stdlib only. Fetches each page as an AI crawler would (no JavaScript), plus
 robots.txt, the sitemap and llms.txt, and prints a PASS / WARN / FAIL report.
@@ -38,7 +39,43 @@ ROBOTS_TOKENS = {
     "Applebot": "search", "Applebot-Extended": "training", "CCBot": "training",
 }
 
+# Paths of legal pages: short is normal there, so a low word count is not a gap.
+LEGAL = re.compile(r"(?i)(terms|conditions|cgv|cgu|privacy|confidentialit|mentions-legales|legal|cookies?-(?:policy|notice|settings)|imprint|impressum|datenschutz|agb|privacidad|terminos|aviso-legal|privacidade|termos)(?![a-z])")
+SITE_AREAS = {"robots", "sitemap", "index", "llms.txt"}
+
 results = []  # (level, area, message)
+
+
+def issue_key(area, msg):
+    """Same issue across two runs: word counts and dates change, the issue doesn't."""
+    return area, re.sub(r"\d+", "#", msg.split(";")[0])[:60]
+
+
+def compare(old_report, pages):
+    """What changed since an earlier report written by this script."""
+    old, level = [], None
+    for line in old_report.splitlines():
+        if line.startswith("## "):
+            level = line[3:].strip()
+        m = re.match(r"- \*\*(.+?)\*\*: (.*)", line)
+        if m and level in ("FAIL", "WARN"):
+            old.append((level, m.group(1), m.group(2)))
+    new = [r for r in results if r[0] in ("FAIL", "WARN")]
+    new_keys = {issue_key(a, m) for _, a, m in new}
+    old_keys = {issue_key(a, m) for _, a, m in old}
+    checked = SITE_AREAS | {urlparse(u).path or "/" for u in pages}
+    fixed = [r for r in old if issue_key(r[1], r[2]) not in new_keys and r[1] in checked]
+    unchecked = [r for r in old if issue_key(r[1], r[2]) not in new_keys and r[1] not in checked]
+    remaining = [r for r in new if issue_key(r[1], r[2]) in old_keys]
+    fresh = [r for r in new if issue_key(r[1], r[2]) not in old_keys]
+    out = ["## Compared with the earlier report", "",
+           f"**{len(fixed)} fixed · {len(remaining)} remaining · {len(fresh)} new**"
+           + (f" · {len(unchecked)} not re-checked" if unchecked else ""), ""]
+    for title, rows in (("Fixed", fixed), ("Remaining", remaining), ("New", fresh),
+                        ("Not re-checked (page not in this run; pass its URL or use --all)", unchecked)):
+        if rows:
+            out += [f"### {title}"] + [f"- {lvl} **{area}**: {msg}" for lvl, area, msg in rows] + [""]
+    return out
 
 
 def add(level, area, msg):
@@ -266,8 +303,10 @@ def audit_page(url, bots=True):
     words = p.words()
     if words < 80:
         add("FAIL", area, f"only {words} words in the raw HTML ({p.scripts} scripts): AI crawlers don't run JavaScript, so this page looks empty to them. Server-render or pre-render it")
+    elif words < 300 and LEGAL.search(area):
+        add("INFO", area, f"{words} words of text without JavaScript; a legal page, fine to leave short")
     elif words < 300:
-        add("WARN", area, f"{words} words of text without JavaScript; thin for an answer engine to quote")
+        add("WARN", area, f"{words} words of text without JavaScript; a content page too thin for an answer engine to quote: expand it with facts the site already has")
     else:
         add("PASS", area, f"{words} words readable without JavaScript")
     xrt = (h.get("X-Robots-Tag") or h.get("x-robots-tag") or "").lower()
@@ -313,8 +352,13 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--sample", type=int, default=5, help="sitemap pages to audit when only the home URL is given")
     ap.add_argument("--all", action="store_true", help="audit every sitemap URL (titles, headings, words); bot user-agent checks stay on the first 5 pages")
+    ap.add_argument("--compare", metavar="OLD_REPORT", help="an earlier report from this script: adds what was fixed, what is new and what remains (may be the same file as --out)")
     a = ap.parse_args()
-    base = "{0.scheme}://{0.netloc}".format(urlparse(a.urls[0]))
+    old_report = None
+    if a.compare:
+        try: old_report = open(a.compare, encoding="utf-8").read()
+        except OSError as e: sys.exit(f"--compare {a.compare}: {e}")
+    base ="{0.scheme}://{0.netloc}".format(urlparse(a.urls[0]))
     sitemaps, _ = audit_robots(base)
     sm_urls = audit_sitemap(base, sitemaps)
     audit_llms(base)
@@ -342,7 +386,9 @@ def main():
         lines.append(f"## {lvl}")
         lines += [f"- **{area}**: {msg}" for _, area, msg in rows]
         lines.append("")
-    report = "\n".join(lines)
+    if old_report is not None:
+        lines[4:4] = compare(old_report, pages)
+    report ="\n".join(lines)
     if a.out:
         with open(a.out, "w", encoding="utf-8") as f: f.write(report)
     sys.stdout.reconfigure(encoding="utf-8")

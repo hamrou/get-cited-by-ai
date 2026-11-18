@@ -46,6 +46,51 @@ BASE = {  # overridable for testing / proxies
 }
 
 
+# Common short words per language: enough to tell which language a buyer
+# question is written in, not a real language detector.
+STOPWORDS = {
+    "en": "the for is what how best where to of and which are does can with near buy my in",
+    "fr": "le les des pour est quel quelle quels quelles comment meilleur meilleure où du une et sur avec acheter au aux pas mon dans",
+    "es": "el los las para es qué cómo mejor dónde del una y cuál con comprar mi cerca en",
+    "de": "der die das für ist was wie beste wo und ein eine welche mit kaufen mein im",
+    "pt": "o os as para é qual como melhor onde do da um uma e com comprar meu em",
+    "it": "il gli per è quale come migliore dove del della un una e con comprare mio in",
+}
+STOPWORDS = {k: set(v.split()) for k, v in STOPWORDS.items()}
+
+
+def prompt_lang(prompt):
+    """Best-guess language of one prompt, or None when it isn't clear."""
+    words = re.findall(r"[^\W\d_]+", prompt.lower())
+    hits = {lang: sum(w in sw for w in words) for lang, sw in STOPWORDS.items()}
+    best = sorted(hits.items(), key=lambda kv: -kv[1])
+    return best[0][0] if best[0][1] and best[0][1] > best[1][1] else None
+
+
+def site_lang(domain):
+    """The home page's <html lang>, two letters, or '' (one request, no key needed)."""
+    try:
+        req = urllib.request.Request(f"https://{domain}/", headers={"User-Agent": "Mozilla/5.0 (compatible; get-cited-by-ai-panel/1.0)"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            m = re.search(r"<html[^>]*\blang=[\"']?([a-zA-Z]{2})", r.read(20000).decode("utf-8", "replace"))
+            return m.group(1).lower() if m else ""
+    except Exception:
+        return ""
+
+
+def language_warning(prompts, lang):
+    if lang not in STOPWORDS:
+        return None
+    langs = [prompt_lang(p) for p in prompts]
+    known = [l for l in langs if l]
+    same = sum(l == lang for l in known)
+    if len(known) >= 3 and same < len(known) / 2:
+        top = Counter(known).most_common(1)[0][0]
+        return (f"WARNING: the site is in '{lang}' but only {same} of {len(known)} prompts look like '{lang}' (most look like '{top}'). "
+                f"Buyers ask in their own language: rewrite prompts.txt, or pass --lang {top} if the buyers really ask in '{top}'.")
+    return None
+
+
 def key_for(engine):
     for k in ENGINES[engine][0]:
         if os.environ.get(k):
@@ -152,6 +197,7 @@ def main():
     ap.add_argument("--out", default="panel")
     ap.add_argument("--yes", action="store_true", help="actually call the APIs (billed)")
     ap.add_argument("--env-file", action="append", default=[], help="read the API keys from a KEY=VALUE file such as the project's .env (only the 4 key names and model overrides are read; values are never printed)")
+    ap.add_argument("--lang", default="", help="language the buyers ask in (fr, en, es…); default: the <html lang> of --domain's home page. Used only to warn when the prompts are in another language")
     a = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     allowed = {k for e in ENGINES.values() for k in e[0]} | {f"{n.upper()}_MODEL" for n in ENGINES}
@@ -178,6 +224,11 @@ def main():
     print(f"{len(prompts)} prompts × {len(engines)} engines ({', '.join(f'{e}:{model_for(e)}' for e in engines) or 'none'}) × {a.runs} run(s) = {calls} calls, est. ≤ ${cost:.2f}")
     if skipped:
         print(f"skipped (no API key in env): {', '.join(skipped)}")
+    if a.runs == 1 and engines:
+        print(f"Answers vary from run to run: --runs 2 would be {calls * 2} calls, est. ≤ ${cost * 2:.2f}; --runs 3, {calls * 3} calls, est. ≤ ${cost * 3:.2f}.")
+    warning = language_warning(prompts, (a.lang or (site_lang(a.domain) if a.domain else ""))[:2].lower())
+    if warning:
+        print(warning)
     if not a.yes or not engines:
         print("Dry run: nothing was called. Re-run with --yes to query the engines (billed to your keys).")
         return 0

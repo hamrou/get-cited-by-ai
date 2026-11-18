@@ -41,6 +41,44 @@ silently fall through.
 | Local service | service × area pages, prices, FAQ, about/credentials, booking |
 | Content / media / course | topic hubs, glossary, "how to" guides with steps, author pages with credentials |
 
+## Local shop or small store
+
+A shop with a street address, or a small online store selling in one city or
+country. Assistants answer "where can I buy X in <city>" from maps listings,
+social pages and local sites far more than from the shop's own pages.
+
+**Off-site, in this order** (the user creates the accounts; you write the
+exact name, category, description, hours and links to paste):
+
+1. Google Business Profile, Bing Places, Apple Business Connect: identical
+   name, address, phone and hours on all three and on the site. Bing Places
+   feeds ChatGPT search and Copilot.
+2. The social pages buyers in that market actually use (Facebook, Instagram,
+   TikTok, a WhatsApp Business catalog): same name and one-liner, the site
+   link, and every one of them in `sameAs`.
+3. Local directories, marketplaces and classifieds for the country and the
+   category. The panel's "most cited sources" list says which ones assistants
+   read for these prompts.
+4. Local press, bloggers and creators: one pitch with the facts (what, where,
+   price, who is behind it). Paid coverage is disclosed.
+5. Reviews on the platforms above, asked from real customers after a purchase.
+   Never written by the shop.
+
+**On-site**:
+
+- Name, address, phone, hours, delivery areas and payment methods as text on
+  the home page and a contact page, not only in an image or a map embed.
+- `LocalBusiness` (or `Store`) JSON-LD with address, geo, phone, opening hours
+  and `sameAs`; `Product` JSON-LD with price, currency and availability
+  rendered from the live catalog.
+- One page per pickup point or delivery area when there are several, each with
+  its address, hours and how pickup works.
+- Buying guides that answer the category prompts ("which X for Y"), each
+  linking to the products, with prices in the local currency.
+- Prompts and pages in the buyers' language, with the city and country named:
+  "meilleur shampoing naturel à Libreville", "où acheter X au Gabon",
+  "livraison X Libreville".
+
 ## IndexNow (Bing, Yandex, Seznam, Naver; Bing feeds ChatGPT search)
 
 1. Generate a key (32 hex chars), serve it as `/<key>.txt` containing the key.
