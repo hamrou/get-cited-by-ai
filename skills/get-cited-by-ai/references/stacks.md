@@ -93,3 +93,22 @@ Plain Markdown at `/llms.txt` (never the SPA's HTML fallback): `# Name`, a
 `> one-paragraph summary` with the category phrase and key facts (price, free
 tier, platforms), then `## Sections` with links to the key pages and one line
 each. Generate it from the same data as the pages.
+
+## Chinese-language sites for Kimi, DeepSeek and Qwen
+
+- Write prompts and pages in the buyers' actual Chinese, normally Simplified
+  Chinese for a mainland audience; do not literally translate English marketing
+  copy. Keep the brand's Chinese and English names consistent, use `zh-CN` on
+  the Chinese pages, and connect translations with hreflang.
+- Answer the question first with verifiable local facts: Chinese address and
+  service area, local currency and payment terms, dates, limitations and source
+  links. Keep these facts in the initial HTML, not only in an app or image.
+- Test public pages from the target region. A CDN, blocked third-party asset or
+  regional network failure can make an otherwise healthy site inaccessible.
+- Choose off-site work from the engines' actual cited-source lists. Relevant
+  Chinese industry press, Zhihu, Bilibili, directories, marketplaces and local
+  platforms are candidates, not guaranteed levers. Earn real coverage and
+  reviews; no undisclosed promotion or fake accounts.
+- Do not assume that Baidu, Bing or any other index supplies these assistants,
+  and do not invent crawler names. Measure each engine separately with the
+  prompt panel and the official URL-retrieval checks in `references/crawlers.md`.

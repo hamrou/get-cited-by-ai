@@ -13,7 +13,7 @@ Admin → Data display → Channel groups → copy the default group → add cha
 Referral**:
 
 ```
-^(.*\.)?(chatgpt\.com|chat\.openai\.com|openai\.com|perplexity\.ai|claude\.ai|gemini\.google\.com|bard\.google\.com|copilot\.microsoft\.com|edgeservices\.bing\.com|you\.com|phind\.com|meta\.ai|grok\.com|x\.ai|deepseek\.com|chat\.mistral\.ai|duckduckgo\.com/aichat)$
+^(.*\.)?(chatgpt\.com|chat\.openai\.com|openai\.com|perplexity\.ai|claude\.ai|gemini\.google\.com|bard\.google\.com|copilot\.microsoft\.com|edgeservices\.bing\.com|kimi\.com|kimi\.moonshot\.cn|moonshot\.cn|deepseek\.com|chat\.qwen\.ai|qwen\.ai|qianwen\.com|tongyi\.aliyun\.com|you\.com|phind\.com|meta\.ai|grok\.com|x\.ai|chat\.mistral\.ai|duckduckgo\.com/aichat)$
 ```
 
 Don't restrict the medium: ChatGPT adds `utm_source=chatgpt.com` and those show
@@ -48,22 +48,32 @@ prompt set.
 
 ## The prompt panel (the real scoreboard)
 
-Monthly, same 15–30 prompts from the brief, same engines (ChatGPT with search,
-Perplexity, Gemini or AI Mode, Claude with web search, Copilot), logged out or a
-clean profile, same language and country when possible. Record in
-`ai-visibility/panel.md`:
+Monthly, same 15–30 prompts from the brief, same engines (ChatGPT, Perplexity,
+Gemini, Claude, Kimi, DeepSeek and Qwen with search), same language and country
+when possible. Use the official API panel, then spot-check the consumer apps
+logged out or in a clean profile; never automate logged-in consumer sessions.
+Record in `ai-visibility/panel-<date>.md/.json`:
 
 | date | engine | prompt | mentioned | cited (link) | position | competitors named | sources cited |
 
 Track: share of prompts where the brand is mentioned, share where it is linked,
 and which third-party sources keep appearing (go get listed there). Answers vary
-run to run; run each prompt 2–3 times before calling a change.
+run to run; run each prompt 2–3 times before calling a change. Compare engines
+separately: improvement in Qwen does not imply improvement in Kimi or DeepSeek.
+For a Chinese-speaking audience, use natural Chinese prompts and inspect the
+cited Chinese and international sources rather than translating an English panel.
+
+For Kimi, DeepSeek and Qwen, also run the official URL-retrieval check on the
+important pages (`panel.py --fetch-url URL`, then `--yes` only after approval).
+Save `retrieval-<date>.md/.json` beside the panel. Retrieval is a technical
+baseline, not a citation score.
 
 ## Server logs
 
 Count AI bot fetches per week (see crawlers.md) and which pages they fetch.
 Pages never fetched by the search bots are not in their index yet: check
-sitemap, internal links, IndexNow.
+sitemap, internal links, IndexNow. For providers without a documented crawler,
+record observed user agents but do not invent robots.txt tokens from them.
 
 ## Which AI sent this visitor? (attribution)
 
@@ -77,7 +87,7 @@ instead, strongest first:
 2. **Ask the visitor.** Assistant apps often send no referrer, so this traffic
    lands in Direct. One optional question at sign-up, checkout or in a welcome
    step catches it: *"How did you find us?"* with options
-   `ChatGPT · Claude · Perplexity · Gemini · Copilot · Google · Friend · Social · Other`.
+   `ChatGPT · Claude · Perplexity · Gemini · Kimi · DeepSeek · Qwen · Copilot · Google · Friend · Social · Other`.
    Store it with the account; compare it with the detected source.
 3. **AI-only entry points.** Put a dedicated link on the pages answer engines
    read (e.g. `/start?src=ai` in llms.txt and the "how to start" section). A visit
@@ -94,8 +104,11 @@ const AI = [
   [/(^|\.)claude\.ai$/, "claude"],
   [/(^|\.)gemini\.google\.com$|(^|\.)bard\.google\.com$/, "gemini"],
   [/(^|\.)copilot\.microsoft\.com$|(^|\.)edgeservices\.bing\.com$/, "copilot"],
+  [/(^|\.)kimi\.com$|(^|\.)kimi\.moonshot\.cn$|(^|\.)moonshot\.cn$/, "kimi"],
+  [/(^|\.)deepseek\.com$/, "deepseek"],
+  [/(^|\.)chat\.qwen\.ai$|(^|\.)qwen\.ai$|(^|\.)qianwen\.com$|(^|\.)tongyi\.aliyun\.com$/, "qwen"],
   [/(^|\.)meta\.ai$/, "meta-ai"], [/(^|\.)grok\.com$|(^|\.)x\.ai$/, "grok"],
-  [/(^|\.)deepseek\.com$/, "deepseek"], [/(^|\.)chat\.mistral\.ai$/, "mistral"],
+  [/(^|\.)chat\.mistral\.ai$/, "mistral"],
 ];
 function aiSource() {
   const q = new URLSearchParams(location.search);

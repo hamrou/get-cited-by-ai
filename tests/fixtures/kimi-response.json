@@ -1,0 +1,29 @@
+{
+  "id": "resp_kimi_example",
+  "status": "completed",
+  "output": [
+    {
+      "type": "web_search_call",
+      "status": "completed",
+      "action": {
+        "query": "上海 天然洗发水 Acme",
+        "sources": [
+          {"url": "https://acme.com/zh/guide", "title": "Acme 指南"},
+          {"url": "https://example.org/review", "title": "独立评测"}
+        ]
+      }
+    },
+    {
+      "type": "message",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Acme 在上海提供天然洗发水，并公开成分和价格。",
+          "annotations": [
+            {"type": "url_citation", "url": "https://acme.com/zh/guide", "title": "Acme 指南"}
+          ]
+        }
+      ]
+    }
+  ]
+}

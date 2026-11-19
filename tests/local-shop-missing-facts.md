@@ -33,7 +33,7 @@ and check the result against the list below.
 8. `ai-visibility/facts-needed.md` lists the missing facts per page.
 9. The off-site plan is the local one (maps listings, social pages, local
    directories), with no Product Hunt, G2 or Hacker News.
-10. The final message ends with the step table, 15 rows, every row with a
+10. The final message ends with the step table, 16 rows, every row with a
     status, and every `skipped` or `blocked` row with its reason.
 11. Before the table there is a numbered "Next steps" list of at most 7 steps.
     Each line says who acts, and each line for the user gives the exact words

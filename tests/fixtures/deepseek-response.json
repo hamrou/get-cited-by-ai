@@ -1,0 +1,42 @@
+{
+  "id": "chatcmpl_example",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Acme 的成分表和价格页面可以直接核对。",
+        "annotations": [
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://acme.com/zh/ingredients",
+              "title": "Acme 成分表",
+              "start_index": 0,
+              "end_index": 12
+            }
+          }
+        ],
+        "server_tool_calls": [
+          {
+            "index": 0,
+            "calls": [
+              {
+                "id": "srvtoolu_example",
+                "type": "deepseek_web_search",
+                "status": "completed",
+                "action": {
+                  "type": "search",
+                  "queries": ["Acme 成分"],
+                  "sources": [
+                    {"url": "https://acme.com/zh/ingredients", "title": "Acme 成分表"},
+                    {"url": "https://retrieved-but-not-cited.example/page", "title": "未引用结果"}
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

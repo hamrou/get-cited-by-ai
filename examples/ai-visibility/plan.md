@@ -25,7 +25,8 @@ user, or third party.
 | --- | --- | --- |
 | 0 brief and prompt set | done | `brief.md`; 15 French prompts naming Dakar |
 | 1 audit baseline | done | `audit.md`: 0 fail, 4 warn |
-| 1 prompt panel (before deploy) | blocked | dry run done: 30 calls on OpenAI, at most $0.90 |
+| 1 prompt panel (before deploy) | blocked | dry run done: 30 calls on OpenAI, roughly $0.90, not a cap |
+| 1 official retrieval baseline (when Kimi / DeepSeek / Qwen is relevant) | not needed | this fictional shop's buyers use French; not selected for this run |
 | 1 AI traffic and landing pages baseline | blocked | no analytics, access logs not readable |
 | 2 robots.txt and CDN bot access | not needed | audit: all bots allowed, no CDN |
 | 2 Bing / Google verification (user) | blocked | the audit can't see a DNS verification: asked |

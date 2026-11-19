@@ -1,4 +1,4 @@
-# Evidence behind the priorities (checked 2026-11-18)
+# Evidence behind the priorities (checked 2026-11-19)
 
 Re-check yearly: this field moves fast and most "GEO" posts are vendor marketing.
 
@@ -34,3 +34,17 @@ Re-check yearly: this field moves fast and most "GEO" posts are vendor marketing
 - **GA4 AI traffic**: ChatGPT desktop links carry `utm_source=chatgpt.com`;
   mobile apps often arrive as Direct.
   https://www.mo.agency/blog/how-to-track-ai-traffic-and-referrals-in-google-analytics-4
+- **Kimi search and retrieval capability** (official docs, checked 2026-11-19):
+  the Responses API supports server-side `web_search`; URL Fetch returns page
+  Markdown. https://platform.kimi.ai/docs/pricing/websearch and
+  https://platform.kimi.ai/docs/api/tools-fetch. These documents establish API
+  capability and billing, not a tactic that improves citation rank.
+- **DeepSeek search and retrieval capability** (official docs, checked
+  2026-11-19): `deepseek_web_search` returns answer citations and
+  `deepseek_read_url` reads public pages. https://api-docs.deepseek.com/guides/web_tools/
+  API results remain a proxy for the consumer app; no citation-lift claim.
+- **Qwen search and retrieval capability** (official docs, checked 2026-11-19):
+  the Responses API supports `web_search` and `web_extractor`, with sources and
+  citations depending on the protocol. https://www.alibabacloud.com/help/en/model-studio/web-search
+  and https://www.alibabacloud.com/help/en/model-studio/web-extractor. Endpoint,
+  model support and pricing vary by region; no citation-lift claim.

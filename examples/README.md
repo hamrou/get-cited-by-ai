@@ -14,5 +14,5 @@ same files from your own site.
 | [`facts-needed.md`](ai-visibility/facts-needed.md) | 4: the facts only the owner has |
 | [`final-message.md`](ai-visibility/final-message.md) | the last message of the run: state, next steps, findings |
 
-Not shown: `panel-<date>.md`, which a real run writes after you approve the
-billed prompt panel.
+Not shown: `panel-<date>.md` and `retrieval-<date>.md`, which a real run writes
+after you approve the billed prompt panel or official URL-retrieval checks.

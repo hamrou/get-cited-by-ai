@@ -51,3 +51,20 @@ affect citations by the search bots above.
 Server or CDN logs, grep the user agents above. Bots don't run analytics JS, so
 GA never shows them. A healthy site sees OAI-SearchBot / Claude-SearchBot /
 PerplexityBot fetch new pages within days of IndexNow or sitemap updates.
+
+## Kimi, DeepSeek and Qwen: test retrieval, don't invent bots
+
+Do not add unverified "KimiBot", "DeepSeekBot" or "QwenBot" tokens to
+robots.txt. Use the providers' official page-retrieval APIs to test the exact
+public URLs that matter, and inspect real server logs for observed user agents:
+
+```bash
+python "<this skill's folder>/scripts/panel.py" --fetch-url https://example.com/page
+# Check the dry run, then approve the billed calls with --yes.
+```
+
+Kimi URL Fetch returns the extracted Markdown; DeepSeek URL reading returns a
+read-URL tool result; Qwen web extraction returns an extractor result. A failed
+or empty extraction is a retrieval finding, not proof that the consumer app can
+never cite the page. A successful fetch does not prove indexing or citation.
+Official capability references are in `references/evidence.md`.

@@ -1,6 +1,6 @@
 ---
 name: get-cited-by-ai
-description: Use when a website, SaaS, app, game, store or local business should be found, recommended or cited by AI assistants and answer engines (ChatGPT, Claude, Perplexity, Gemini, Copilot, Google AI Overviews and AI Mode). Covers GEO (generative engine optimization), AEO (answer engine optimization), LLMO, AI SEO and AI search visibility; auditing a site for AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot), robots.txt, Cloudflare bot blocking, JavaScript/SPA pages that AI bots can't read, server-side rendering and pre-rendering, sitemaps, IndexNow and Bing indexing, llms.txt, schema/JSON-LD, citable content, brand mentions on Reddit and YouTube, and tracking AI referral traffic in GA4. Triggers: "get cited by ChatGPT", "why doesn't ChatGPT recommend us", "show up in AI answers", "AI visibility audit", "rank in Perplexity", "optimize for AI Overviews", "add llms.txt".
+description: Use when a website, SaaS, app, game, store or local business should be found, recommended or cited by AI assistants and answer engines (ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot, Google AI Overviews and AI Mode). Covers GEO (generative engine optimization), AEO (answer engine optimization), LLMO, AI SEO and AI search visibility; auditing a site for AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot), official Kimi/DeepSeek/Qwen retrieval checks, Chinese-language buyer prompts and content, robots.txt, Cloudflare bot blocking, JavaScript/SPA pages that AI bots can't read, server-side rendering and pre-rendering, sitemaps, IndexNow and Bing indexing, llms.txt, schema/JSON-LD, citable content, brand mentions on Reddit and YouTube, and tracking AI referral traffic in GA4. Triggers: "get cited by ChatGPT", "why doesn't ChatGPT recommend us", "show up in AI answers", "AI visibility audit", "rank in Perplexity", "show up on Kimi", "get cited by DeepSeek", "Qwen visibility", "优化 AI 搜索可见性", "optimize for AI Overviews", "add llms.txt".
 ---
 
 # get-cited-by-ai
@@ -53,9 +53,10 @@ see a DNS verification: "Is the site already added in Bing Webmaster Tools and
 Google Search Console?"
 
 **Ask for the AI keys first.** The panel can only measure the engines it has
-a key for, and a baseline on one engine out of four is a weak baseline. Before
-anything else, run (free, no call, values never printed; pass every env file
-the project has):
+a key for, and a one-engine baseline is weak. Cover the assistants the buyers
+actually use; for Chinese-speaking buyers include Kimi, DeepSeek and Qwen when
+possible. Before anything else, run (free, no call, values never printed; pass
+every env file the project has):
 
 ```bash
 python "<this skill's folder>/scripts/panel.py" --keys --env-file .env
@@ -64,11 +65,12 @@ python "<this skill's folder>/scripts/panel.py" --keys --env-file .env
 If an engine is missing, the first message to the user asks for it, in the
 same message as the intake questions, with the lines it printed:
 
-> The panel can ask ChatGPT, Perplexity, Claude and Gemini. I found a key for
-> OpenAI only. To measure the other three, add these lines to `shop/.env`
-> (never paste a key in chat): `PERPLEXITY_API_KEY=…` (create it at …),
-> `ANTHROPIC_API_KEY=…`, `GEMINI_API_KEY=…`. A 24-question baseline costs
-> about $0.25 to $1 per engine. Reply "keys added", or "continue" to measure
+> The panel can ask ChatGPT, Perplexity, Claude, Gemini, Kimi, DeepSeek and
+> Qwen. I found an OpenAI key only. To measure the others, add the missing
+> lines printed above to `shop/.env` (never paste a key in chat), including
+> `MOONSHOT_API_KEY=…`, `DEEPSEEK_API_KEY=…` and `DASHSCOPE_API_KEY=…` for a
+> Chinese-speaking audience. A 24-question baseline is roughly $0.25 to $2 per
+> engine, not a spending cap. Reply "keys added", or "continue" to measure
 > OpenAI only.
 
 Check that the env file is in `.gitignore` before pointing the user at it.
@@ -85,7 +87,8 @@ Write `ai-visibility/brief.md`:
   Write them in the language the buyers type in (the site's `<html lang>`
   unless the user says otherwise): a French shop gets French prompts. A local
   business gets its city or country in the category prompts ("meilleur
-  shampoing naturel à Libreville").
+  shampoing naturel à Libreville", "上海哪家天然洗发水店比较好"). A Chinese
+  audience gets natural Chinese prompts, not translations of an English set.
 - **Competitors** the assistant names today for those prompts.
 - **The stack** (read the repo: framework, SSR or SPA, hosting/CDN, i18n).
 
@@ -108,33 +111,49 @@ and mark it `ready`.
    ```
 
    Run the dry run yourself, right away, without asking: without `--yes` it
-   calls no API and costs nothing. It prints which
-   engines have a key in the environment and the cost estimate (about
-   $0.01–0.04 per prompt per engine). Ask the user with those concrete
-   numbers ("22 calls on OpenAI + Perplexity, at most $0.88: run it?"), not
-   "which keys do you have?". Never ask for key values in chat. If no key is
-   set in the environment, look for the project's own env files (`.env`,
-   `server/.env`) and pass them with `--env-file` (it reads only the four key
-   names, never prints values); otherwise the user sets them in their shell.
-   Answers vary from run to run, so the dry run also prints the cost of
-   `--runs 2` and `--runs 3`: recommend `--runs 2` for the baseline when the
-   total stays under about $5. If the dry run warns that the prompts are in
-   another language than the site, fix `prompts.txt` before asking.
-   The user approves the billed run, not you. Only add
-   `--yes` after a yes: it bills the user's API keys
-   (OPENAI_API_KEY, PERPLEXITY_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY;
-   engines without a key are skipped). It writes `panel-<date>.md/.json`:
-   mention and link rates per engine, competitors named, and the most cited
-   sources, which is the off-site target list for Step 5.
-   If the user has no API keys, ask them to run 10 prompts by hand in ChatGPT
-   (search on), Perplexity, Gemini and Claude and paste the answers. Either
-   way, never automate logged-in consumer sessions. API answers are a proxy
-   for the apps; a few manual spot checks keep it honest.
-3. Note current AI referral traffic and **the pages AI sends people to**, with
+   calls no API and costs nothing. It prints which engines have a key and a
+   rough cost (about $0.01–0.08 per prompt per engine), **not a spending cap**.
+   Ask the user with those concrete numbers ("22 model calls on OpenAI +
+   Perplexity, roughly $0.88; actual search and token use varies: run it?"),
+   not "which keys do you have?". Never ask for key values in chat. If no key
+   is set in the environment, look for the project's own env files (`.env`,
+   `server/.env`) and pass them with `--env-file` (it reads only recognized
+   key and model names, never prints values); otherwise the user sets them in
+   their shell. Answers vary from run to run, so the dry run also prints the
+   cost of `--runs 2` and `--runs 3`: recommend `--runs 2` for the baseline
+   when the estimate stays under about $5. If the dry run warns that the
+   prompts are in another language than the site, fix `prompts.txt` first.
+   The user approves the billed run, not you. Only add `--yes` after a yes:
+   it bills the user's API keys (OPENAI_API_KEY, PERPLEXITY_API_KEY,
+   ANTHROPIC_API_KEY, GEMINI_API_KEY, MOONSHOT_API_KEY, DEEPSEEK_API_KEY,
+   DASHSCOPE_API_KEY; engines without a key are skipped). Qwen's region and
+   workspace endpoint can be set with `QWEN_BASE_URL`. The run writes
+   `panel-<date>.md/.json`: mention and link rates per engine, competitors
+   named, and cited sources for Step 5.
+   If the user has no API keys, ask them to run 10 prompts by hand in the
+   consumer apps their buyers use (search on), including Kimi, DeepSeek and
+   Qwen for a Chinese-speaking audience, and paste the answers. Either way,
+   never automate logged-in consumer sessions. API answers are a proxy for
+   the apps; a few manual spot checks keep it honest.
+3. **Official retrieval baseline for Chinese AI assistants**: when Kimi,
+   DeepSeek or Qwen matters, test each important public page. Do not invent
+   crawler user agents or assume Bing/Google/Baidu supplies these engines:
+
+   ```bash
+   python "<this skill's folder>/scripts/panel.py" --fetch-url https://example.com/important-page --out ai-visibility/retrieval
+   ```
+
+   Run the free dry run immediately and ask before adding `--yes`: these are
+   billed API calls too. The default engines are Kimi, DeepSeek and Qwen.
+   Save `retrieval-<date>.md/.json`; inspect extracted content or answer
+   previews, not just the yes/no status. Retrieval success does not prove indexing or citation, and
+   failure does not prove the consumer app can never cite the page. See
+   `references/crawlers.md`.
+4. Note current AI referral traffic and **the pages AI sends people to**, with
    their conversion rate (see `references/measure.md`). Few sessions is a hint,
    not a ranking: say so. GA only counts visitors who accepted the consent
    banner; if the server keeps access logs, count AI referrers there too.
-4. "No Bing verification visible" in the audit is a question for the user, not
+5. "No Bing verification visible" in the audit is a question for the user, not
    a finding: a DNS CNAME verification is invisible to the audit. Use the
    Step 0 answer. Report it as a gap, or put "verify in Bing" on the user's
    task list, only after the user says the site isn't there. Either way, open
@@ -202,12 +221,20 @@ Write each page so a passage can be lifted on its own:
 - **Tables and lists** for comparisons, specs and steps.
 - **Visible "updated" date**; update key pages at least quarterly.
 - **Translations** as real pages per language with hreflang, if the audience is
-  multilingual (assistants answer in the asker's language).
+  multilingual (assistants answer in the asker's language). For a mainland
+  Chinese audience use natural Simplified Chinese and `zh-CN`; keep Chinese
+  and English brand names consistent rather than literally translating copy.
 - Then add the cheap extras (skippable; do them because they are cheap and help
   normal search, not for citations): JSON-LD matching the page (Organization, WebSite,
   Product/SoftwareApplication/VideoGame/LocalBusiness, FAQPage, BreadcrumbList,
   Article with dateModified), Open Graph, canonical, and an llms.txt generated from
   the same live facts (H1 name, `>` summary, links to the key pages).
+
+For Kimi, DeepSeek and Qwen, include the local facts a Chinese answer needs:
+Chinese address or service area, local currency and payment terms, dates,
+limitations and sources. Test accessibility from the target region; a blocked
+CDN or third-party asset can make a healthy site unreachable. Recipe:
+`references/stacks.md`, "Chinese-language sites for Kimi, DeepSeek and Qwen".
 
 **When product facts are missing** (ingredients, specs, reviews), never invent
 them, and don't stop at the extras either. In the same session:
@@ -235,6 +262,9 @@ category, and plan presence there, honestly:
   disclosure. No sock puppets, no bought upvotes.
 - **YouTube**: a demo, a how-to, creator coverage (disclosed if paid).
 - **Press and roundups**: pitch the "best X" list articles that assistants cite.
+- **Chinese-language sources** when the panel cites them: relevant industry
+  press, Zhihu, Bilibili, directories, marketplaces and local platforms are
+  candidates, not guaranteed levers. Earn real coverage and disclose promotion.
 - **Wikipedia/Wikidata** only if the entity meets notability; never write your
   own article (conflict of interest). A Wikidata item with official site and
   socials is fine when the entity is real and notable.
@@ -258,10 +288,12 @@ category ever is.
 Set up what `references/measure.md` describes (GA4 AI channel, Bing AI
 Performance report, server-log bot hits, the monthly prompt panel), plus
 **which AI sent each visitor**: classify the referrer/UTM on landing, ask
-"How did you find us?" (with ChatGPT, Claude, Perplexity, Gemini, Copilot as
-options) at sign-up or checkout, and carry the source into the conversion event. Re-run the
-audit and the prompt panel after 4–6 weeks; retrieval engines move in days to
-weeks, model knowledge only with new training cycles.
+"How did you find us?" (with ChatGPT, Claude, Perplexity, Gemini, Kimi,
+DeepSeek, Qwen and Copilot as options) at sign-up or checkout, and carry the
+source into the conversion event. Re-run the audit, prompt panel and any
+Kimi/DeepSeek/Qwen retrieval checks after 4–6 weeks. Compare each engine
+separately; retrieval engines move in days to weeks, model knowledge only with
+new training cycles.
 
 **Re-check dates**: don't leave them in a file for the user to remember. If the
 harness can schedule work (Claude Code: `/schedule` creates a scheduled agent;
@@ -319,10 +351,11 @@ Per-task steps: `references/browser.md`.
 
 `ai-visibility/brief.md`, `ai-visibility/audit.md` (before and after),
 `ai-visibility/plan.md` (fixes ranked: reach → readable → quotable → off-site,
-each with owner: code / user / third party), the code changes, and
-`ai-visibility/panel-<date>.md` (prompt results by date), and the AI landing
-pages with the Step 7 fixes, and `ai-visibility/facts-needed.md` when facts
-are missing.
+each with owner: code / user / third party), the code changes,
+`ai-visibility/panel-<date>.md` (prompt results by date), and
+`ai-visibility/retrieval-<date>.md` when official Kimi/DeepSeek/Qwen retrieval
+checks are relevant, the AI landing pages with Step 7 fixes, and
+`ai-visibility/facts-needed.md` when facts are missing.
 
 **The final message has these four parts, in this order** (REQUIRED):
 
@@ -337,7 +370,7 @@ are missing.
    list. The re-check date is the last line.
 
    ```
-   1. You: reply "run the panel" (48 calls on OpenAI, at most $1.44).
+   1. You: reply "run the panel" (48 calls on OpenAI, roughly $1.44, not a cap).
       Me: run it and show who the assistants name instead of you.
    2. You: reply "deploy".
       Me: deploy the 3 ready fixes (IndexNow, home title, attribution), then
@@ -368,6 +401,7 @@ are missing.
 | 0 brief and prompt set | | |
 | 1 audit baseline | | |
 | 1 prompt panel (before deploy) | | |
+| 1 official retrieval baseline (when Kimi / DeepSeek / Qwen is relevant) | | |
 | 1 AI traffic and landing pages baseline | | |
 | 2 robots.txt and CDN bot access | | |
 | 2 Bing / Google verification (user) | | |

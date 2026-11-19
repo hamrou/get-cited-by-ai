@@ -1,0 +1,33 @@
+{
+  "id": "resp_qwen_example",
+  "status": "completed",
+  "output": [
+    {
+      "type": "web_search_call",
+      "status": "completed",
+      "action": {
+        "query": "Acme 价格",
+        "sources": [
+          {"url": "https://acme.com/zh/pricing", "title": "Acme 价格"}
+        ]
+      }
+    },
+    {
+      "type": "message",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Acme 的中文价格页列明了每项费用。",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "url": "https://acme.com/zh/pricing",
+              "title": "Acme 价格"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tool_usage": {"web_search": {"num_requests": 1}}
+}

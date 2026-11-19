@@ -1,0 +1,22 @@
+{
+  "id": "resp_qwen_fetch_example",
+  "status": "completed",
+  "output": [
+    {
+      "type": "web_extractor_call",
+      "status": "completed",
+      "goal": "读取 Acme 中文指南",
+      "output": "# Acme 天然洗发水指南\n\n成分、使用方法和价格。"
+    },
+    {
+      "type": "message",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "页面列出了成分、使用方法和价格。",
+          "annotations": []
+        }
+      ]
+    }
+  ]
+}

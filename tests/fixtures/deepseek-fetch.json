@@ -1,0 +1,28 @@
+{
+  "id": "chatcmpl_fetch_example",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "该页面说明 Acme 产品的成分、使用方法和价格。",
+        "server_tool_calls": [
+          {
+            "index": 0,
+            "calls": [
+              {
+                "id": "srvtoolu_fetch_example",
+                "type": "deepseek_read_url",
+                "status": "completed",
+                "page": {
+                  "url": "https://acme.com/zh/guide",
+                  "title": "Acme 天然洗发水指南",
+                  "published_at": "2026-11-01"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

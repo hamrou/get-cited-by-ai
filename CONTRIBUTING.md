@@ -11,8 +11,8 @@ and check.
 | `skills/get-cited-by-ai/SKILL.md` | the skill: the steps an agent follows |
 | `skills/get-cited-by-ai/references/` | evidence, crawler list, stack recipes, measurement, browser tasks |
 | `skills/get-cited-by-ai/scripts/audit.py` | the site audit |
-| `skills/get-cited-by-ai/scripts/panel.py` | the prompt panel |
-| `tests/` | scenarios with a pass list, for checking the skill after an edit |
+| `skills/get-cited-by-ai/scripts/panel.py` | the prompt panel and official Kimi / DeepSeek / Qwen retrieval checks |
+| `tests/` | agent scenarios, offline unit tests and fictional provider-response fixtures |
 | `examples/` | a sample run for a fictional shop |
 
 ## Ground rules
@@ -33,8 +33,11 @@ and check.
 
 - Standard library only; keep it working on Python 3.9 and newer. In particular,
   no backslash inside an f-string expression (a syntax error before 3.12).
+- Run the offline unit tests with `python -m unittest discover -s tests -p "test_*.py"`.
+  Provider tests use saved responses and must never call an API.
 - Check both scripts with `python -m py_compile`, and run `audit.py` on a real
-  public site and `panel.py --keys` and a dry run (no `--yes`; nothing is billed).
+  public site, `panel.py --keys`, a panel dry run and a `--fetch-url` dry run
+  (no `--yes`; nothing is billed).
 - Don't commit `__pycache__`, reports or env files.
 
 ## Changing the skill

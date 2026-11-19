@@ -1,8 +1,8 @@
 # get-cited-by-ai
 
-**Get your website, app or business found and cited by ChatGPT, Claude, Perplexity, Gemini, Copilot and Google AI Overviews.**
+**Get your website, app or business found and cited by ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot and Google AI Overviews.**
 
-An evidence-based GEO (generative engine optimization) / AI SEO skill for Claude Code and other agents that read `SKILL.md`. It checks how AI crawlers actually see your site, measures what the assistants say about you today, fixes what the research supports, and tells you exactly what to do next.
+An evidence-based GEO (generative engine optimization) / AI SEO skill for Claude Code and other agents that read `SKILL.md`. It checks how AI crawlers actually see your site, measures what the assistants say about you today, fixes what the research supports, and tells you exactly what to do next. For Chinese-speaking audiences it creates Chinese buyer prompts and tests official Kimi, DeepSeek and Qwen search and page-retrieval APIs.
 
 Most "AI SEO" advice starts with `llms.txt` and schema. The data says those barely move the needle. This skill starts with what does.
 
@@ -47,6 +47,7 @@ You need Python 3.9 or newer (standard library only, nothing to install). The pr
 | `ai-visibility/prompts.txt` | 15–30 questions, in your buyers' language |
 | `ai-visibility/audit.md` | the baseline, then the same audit after your fixes |
 | `ai-visibility/panel-<date>.md` | how often each assistant names you, who it names instead, which sources it cites |
+| `ai-visibility/retrieval-<date>.md` | whether official Kimi, DeepSeek and Qwen APIs can extract your important pages |
 | `ai-visibility/plan.md` | fixes ranked reach → readable → quotable → off-site, with an owner for each |
 | `ai-visibility/facts-needed.md` | the facts only you have (ingredients, prices, reviews), as a short form |
 | code changes | canonical links, structured data, `llms.txt`, IndexNow, attribution, pages that answer the questions |
@@ -65,16 +66,16 @@ See a complete sample, for a fictional shop, in [`examples/`](examples/).
 | Schema / JSON-LD | no measurable citation lift in a 2026 controlled study | low, cheap |
 | llms.txt | ~97% of files never get an AI request | optional |
 
-Sources with links: [`skills/get-cited-by-ai/references/evidence.md`](skills/get-cited-by-ai/references/evidence.md). A brand with no mentions elsewhere is cited last whatever its site looks like: expect months, not weeks.
+Sources with links: [`skills/get-cited-by-ai/references/evidence.md`](skills/get-cited-by-ai/references/evidence.md). A brand with no mentions elsewhere is cited last whatever its site looks like: expect months, not weeks. For Kimi, DeepSeek and Qwen, official search and URL-retrieval APIs make measurement possible; their documentation does not establish a special ranking tactic or a required search index.
 
 ## How it works
 
 1. **Brief**: what you are, the questions buyers ask assistants, the competitors named today. It also asks you to add any missing AI API keys to your env file (never in chat).
-2. **Baseline**: the audit script and the prompt panel, run before any change goes live so the comparison means something.
-3. **Reach**: robots.txt for every AI bot, Cloudflare / WAF bot blocking, Search Console and Bing Webmaster, sitemap with real `lastmod`, IndexNow for the pages that changed.
+2. **Baseline**: the audit script and prompt panel, plus official Kimi / DeepSeek / Qwen retrieval checks when relevant, before any change goes live.
+3. **Reach**: robots.txt for documented AI bots, Cloudflare / WAF bot blocking, Search Console and Bing Webmaster, sitemap with real `lastmod`, IndexNow for the pages that changed.
 4. **Readable**: key pages readable without JavaScript, with a recipe per stack (Next.js, Nuxt, Astro, Vite/React SPA, Express, Django, Rails, WordPress, Shopify, static sites, mobile apps, local shops).
-5. **Quotable**: one page per question, answer first, with facts, tables and dates. When facts are missing it never invents them: it writes the pages your own data allows and gives you a form for the rest.
-6. **Confirmed elsewhere**: an honest off-site plan (directories, Reddit, YouTube, roundups; maps listings, social pages and local directories for a local shop), then measurement: GA4 or server logs, Bing's AI Performance report, a monthly panel, and **which AI sent each visitor**.
+5. **Quotable**: one page per question, answer first, with facts, tables and dates. Chinese-language runs use natural Chinese prompts and pages, consistent Chinese/English brand names and `zh-CN` / hreflang. Missing facts are requested, never invented.
+6. **Confirmed elsewhere**: an honest off-site plan based on each engine's actual cited sources, then measurement: GA4 or server logs, Bing's AI Performance report, a monthly panel, and **which AI sent each visitor**.
 7. **Convert**: fixes the pages AI sends visitors to: the promised answer on the first screen, a next step that continues their question, value before any sign-up wall.
 
 Every run ends with the state in a sentence, a numbered **Next steps** list (`You:` / `Me:`, with the exact reply and the cost), the audit findings, and a table of every step marked done, ready, blocked, not needed or skipped, so nothing is dropped silently.
@@ -109,7 +110,7 @@ python skills/get-cited-by-ai/scripts/audit.py https://your-site.com --out ai-au
 
 It checks:
 
-- **robots.txt**, for each AI search, user and training bot;
+- **robots.txt**, for each AI search, user and training bot, and for the path of every page it audits (wildcards, `$` and longest-match rules);
 - whether **AI user agents get a 403 or a challenge page**;
 - the **word count without JavaScript**, telling thin content pages (worth fixing) from short legal pages (fine);
 - `noindex` / `nosnippet`;
@@ -125,19 +126,34 @@ python skills/get-cited-by-ai/scripts/audit.py https://your-site.com --compare a
 # 6 fixed · 3 remaining · 1 new
 ```
 
+A finding counts as fixed only if the same check ran again and no longer reports it. A page that failed to load, a page outside this run or a skipped bot check is listed as "not re-checked".
+
 ## The prompt panel
 
-Asks your buyer questions to ChatGPT, Perplexity, Claude and Gemini through their official APIs with web search on, and scores the answers. It uses your own keys (`OPENAI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`), and engines without a key are skipped.
+Asks your buyer questions to ChatGPT, Perplexity, Claude, Gemini, Kimi, DeepSeek and Qwen through their official APIs with web search on, and scores the answers. It uses your own keys (`OPENAI_API_KEY`, `PERPLEXITY_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `MOONSHOT_API_KEY`, `DEEPSEEK_API_KEY`, `DASHSCOPE_API_KEY`), and engines without a key are skipped.
 
 ```bash
 python skills/get-cited-by-ai/scripts/panel.py --keys                  # which keys are set (free)
 python skills/get-cited-by-ai/scripts/panel.py prompts.txt --brand "Acme" --domain acme.com --competitors "Foo,Bar"
-# 12 prompts × 4 engines = 48 calls, est. ≤ $1.44   → add --yes to run
+# 12 prompts × 4 engines = 48 model calls, rough est. $1.44 → add --yes to run
 ```
 
-Without `--yes` it is a dry run: nothing is called or billed. The dry run shows the cost, the cost of repeating each prompt (`--runs 2`, because answers vary), and warns when the prompts are in a different language from your site. `--env-file .env` reads only the key names it needs and never prints a value.
+Without `--yes` it is a dry run: nothing is called or billed. The dry run shows a rough cost—not a spending cap—and the cost of repeating each prompt (`--runs 2`, because answers vary). Search and token usage vary, especially for agent-style retrieval. `--env-file .env` reads only the recognized key and model names and never prints a value.
 
-Output: mention and link rate per engine, average link position, competitors named, and **the sources each engine cites**, which is the list of sites where you need to be mentioned. API answers are a proxy for the consumer apps, so spot-check a few by hand.
+The language check supports Chinese (`zh`) as well as English, French, Spanish, German, Portuguese and Italian. Chinese buyer prompts should be natural Simplified Chinese when that is the audience's language, not literal translations. Qwen defaults to the China compatible-mode endpoint; set `QWEN_BASE_URL` to the full compatible-mode base for another Model Studio region, including its workspace ID. Every provider supports `<ENGINE>_MODEL` and `<ENGINE>_BASE_URL` overrides.
+
+Output: mention and link rate per engine, average link position, competitors named, and **the sources each engine cites**, which is the list of sites where you need to be mentioned. API answers are a proxy for the consumer apps, so spot-check a few by hand in Kimi, DeepSeek, Qwen and the other apps your buyers use.
+
+### Official Kimi / DeepSeek / Qwen URL-retrieval checks
+
+Test the exact public pages that matter through Kimi URL Fetch, DeepSeek URL reading and Qwen web extraction. This does not assume undocumented crawler names or which search index an assistant uses:
+
+```bash
+python skills/get-cited-by-ai/scripts/panel.py --fetch-url https://your-site.com/important-page
+# Review the free dry run, then add --yes to approve the billed retrieval requests.
+```
+
+The default engines for this mode are Kimi, DeepSeek and Qwen. It writes `retrieval-<date>.md/.json` with retrieval status, available extracted-content or answer character counts, and short previews. Kimi returns extracted Markdown, Qwen returns extractor output, and DeepSeek returns the model's summary because page content remains encrypted. Retrieval success does not prove indexing or citation; failure is a finding to investigate, not proof that the consumer app can never cite the page.
 
 ## Install
 
@@ -162,7 +178,7 @@ npx skills add https://github.com/hamrou/get-cited-by-ai --skill get-cited-by-ai
 - No invented facts: missing ingredients, prices or reviews go on a form for you.
 - No guaranteed results. It reports the numbers before and after.
 - Your DNS, CDN, webmaster and directory accounts stay yours: you log in, and it asks before every change.
-- It never runs the billed panel without your yes.
+- It never runs the billed panel or URL-retrieval checks without your yes.
 
 ## Contributing
 

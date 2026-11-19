@@ -44,15 +44,58 @@ LEGAL = re.compile(r"(?i)(terms|conditions|cgv|cgu|privacy|confidentialit|mentio
 SITE_AREAS = {"robots", "sitemap", "index", "llms.txt"}
 
 results = []  # (level, area, message)
+incomplete = set()    # areas where the check could not run (fetch failed): never "fixed"
+bot_checked = set()   # pages where the AI user-agent checks ran this time
+
+# Message -> check id, so a finding is the same finding across two runs even
+# when its numbers, its wording or its severity change (thin page: WARN -> FAIL).
+CHECK_IDS = [
+    (r"^robots\.txt blocks (\S+) from this path", r"robots-path:\1"),
+    (r"^robots\.txt blocks (\S+)", r"robots-block:\1"),
+    (r"^/robots\.txt missing", "robots-missing"),
+    (r"no Sitemap: line", "robots-no-sitemap"),
+    (r"every <lastmod>", "lastmod-identical"),
+    (r"no <lastmod>", "lastmod-missing"),
+    (r"\u2192 HTTP", "sitemap-http"),
+    (r"^/llms\.txt returns an HTML", "llms-html"),
+    (r"spec: start with an H1", "llms-format"),
+    (r"^HTTP \d+ for the browser fetch", "page-fetch"),
+    (r"\bwords\b", "words"),
+    (r"noindex", "noindex"),
+    (r"nosnippet", "nosnippet"),
+    (r"^no <title>|^title is", "title"),
+    (r"meta description", "meta-description"),
+    (r"<h1>", "h1"),
+    (r"<h2>", "h2"),
+    (r"canonical", "canonical"),
+    (r"lang attribute", "html-lang"),
+    (r"Open Graph", "open-graph"),
+    (r"JSON-LD", "jsonld"),
+    (r"^(\S+) user agent gets HTTP", r"bot-access:\1"),
+    (r"^(\S+) gets a very different page", r"bot-differs:\1"),
+    (r"Bing Webmaster", "bing-verification"),
+]
+CHECK_IDS = [(re.compile(rx), cid) for rx, cid in CHECK_IDS]
+
+
+def check_id(msg):
+    for rx, cid in CHECK_IDS:
+        m = rx.search(msg)
+        if m:
+            return m.expand(cid)
+    return re.sub(r"\d+", "#", msg.split(";")[0])[:60]
 
 
 def issue_key(area, msg):
-    """Same issue across two runs: word counts and dates change, the issue doesn't."""
-    return area, re.sub(r"\d+", "#", msg.split(";")[0])[:60]
+    return area, check_id(msg)
 
 
 def compare(old_report, pages):
-    """What changed since an earlier report written by this script."""
+    """What changed since an earlier report written by this script.
+
+    An old issue counts as fixed only when the same check ran this time and no
+    longer reports it. A page that failed to load, a page outside this run, or
+    an AI user-agent check that was skipped is "not re-checked", never fixed."""
     old, level = [], None
     for line in old_report.splitlines():
         if line.startswith("## "):
@@ -63,16 +106,25 @@ def compare(old_report, pages):
     new = [r for r in results if r[0] in ("FAIL", "WARN")]
     new_keys = {issue_key(a, m) for _, a, m in new}
     old_keys = {issue_key(a, m) for _, a, m in old}
-    checked = SITE_AREAS | {urlparse(u).path or "/" for u in pages}
-    fixed = [r for r in old if issue_key(r[1], r[2]) not in new_keys and r[1] in checked]
-    unchecked = [r for r in old if issue_key(r[1], r[2]) not in new_keys and r[1] not in checked]
+    in_run = SITE_AREAS | {urlparse(u).path or "/" for u in pages}
+
+    def ran(area, msg):
+        if area not in in_run or area in incomplete:
+            return False
+        if check_id(msg).startswith("bot-") and area not in bot_checked:
+            return False
+        return True
+
+    gone = [r for r in old if issue_key(r[1], r[2]) not in new_keys]
+    fixed = [r for r in gone if ran(r[1], r[2])]
+    unchecked = [r for r in gone if not ran(r[1], r[2])]
     remaining = [r for r in new if issue_key(r[1], r[2]) in old_keys]
     fresh = [r for r in new if issue_key(r[1], r[2]) not in old_keys]
     out = ["## Compared with the earlier report", "",
-           f"**{len(fixed)} fixed · {len(remaining)} remaining · {len(fresh)} new**"
-           + (f" · {len(unchecked)} not re-checked" if unchecked else ""), ""]
+           f"**{len(fixed)} fixed \u00b7 {len(remaining)} remaining \u00b7 {len(fresh)} new**"
+           + (f" \u00b7 {len(unchecked)} not re-checked" if unchecked else ""), ""]
     for title, rows in (("Fixed", fixed), ("Remaining", remaining), ("New", fresh),
-                        ("Not re-checked (page not in this run; pass its URL or use --all)", unchecked)):
+                        ("Not re-checked (the page or the check did not run this time; pass its URL, use --all, or try again)", unchecked)):
         if rows:
             out += [f"### {title}"] + [f"- {lvl} **{area}**: {msg}" for lvl, area, msg in rows] + [""]
     return out
@@ -189,19 +241,30 @@ def parse_robots(txt):
     return groups
 
 
+def _robots_rx(pattern):
+    anchored = pattern.endswith("$")
+    core = pattern[:-1] if anchored else pattern
+    return re.compile("".join(".*" if c == "*" else re.escape(c) for c in core) + ("$" if anchored else ""))
+
+
 def robots_allows(groups, agent, path="/"):
+    """RFC 9309 matching: the agent's own group, else '*'; '*' and '$' in
+    patterns; the longest matching rule wins and Allow wins a tie. `path`
+    should include the query string, as crawlers match it."""
     rules = groups.get(agent.lower())
     if rules is None: rules = groups.get("*", [])
-    best = (-1, True)
-    for allow, p in rules:
-        if p == "": continue  # "Disallow:" (empty) allows everything
-        if path.startswith(p.rstrip("*").rstrip("$")) and len(p) > best[0]:
-            best = (len(p), allow)
-    return best[1]
+    best_len, verdict = -1, True
+    for allow, pat in rules:
+        if pat == "": continue  # an empty Allow or Disallow matches nothing
+        if _robots_rx(pat).match(path):
+            if len(pat) > best_len or (len(pat) == best_len and allow):
+                best_len, verdict = len(pat), allow
+    return verdict
 
 
 def audit_robots(base):
     st, _, body, _ = fetch(urljoin(base, "/robots.txt"))
+    if st == 0: incomplete.add("robots")
     if st != 200 or "<html" in body[:500].lower():
         add("WARN", "robots", f"/robots.txt missing or not plain text (HTTP {st}); every bot is allowed by default, but no Sitemap: line is advertised")
         return [], {}
@@ -226,6 +289,7 @@ def audit_sitemap(base, listed):
         if u in seen: continue
         seen.add(u)
         st, _, body, _ = fetch(u)
+        if st == 0: incomplete.add("sitemap")
         if st != 200 or "<html" in body[:300].lower():
             add("FAIL" if not listed and u.endswith("/sitemap.xml") else "WARN", "sitemap", f"{u} → HTTP {st}{' (HTML, not XML)' if st == 200 else ''}")
             continue
@@ -282,6 +346,7 @@ def audit_index(base, n_sitemap=0):
 
 def audit_llms(base):
     st, h, body, _ = fetch(urljoin(base, "/llms.txt"))
+    if st == 0: incomplete.add("llms.txt")
     ct = (h.get("Content-Type") or h.get("content-type") or "").lower()
     if st != 200:
         add("INFO", "llms.txt", f"/llms.txt not found (HTTP {st}). Optional: cheap to add, but few AI bots fetch it today")
@@ -293,11 +358,19 @@ def audit_llms(base):
         add("PASS" if ok else "WARN", "llms.txt", f"/llms.txt is text ({len(body)} chars){hint}")
 
 
-def audit_page(url, bots=True):
+def audit_page(url, bots=True, robots=None):
     st, h, html, final = fetch(url)
     area = urlparse(url).path or "/"
     if st != 200:
+        incomplete.add(area)
         add("FAIL", area, f"HTTP {st} for the browser fetch"); return
+    if robots:  # does robots.txt let the AI search and user bots fetch THIS path?
+        u = urlparse(url)
+        path = (u.path or "/") + (f"?{u.query}" if u.query else "")
+        if path != "/":
+            for token, kind in ROBOTS_TOKENS.items():
+                if kind in ("search", "user") and not robots_allows(robots, token, path):
+                    add("FAIL", area, f"robots.txt blocks {token} from this path ({kind} bot): it can't cite or link this page")
     p = Page()
     try: p.feed(html)
     except Exception: pass
@@ -339,6 +412,7 @@ def audit_page(url, bots=True):
     if not re.search(r"\b(20\d\d)\b", " ".join(p.text)) and "article:modified_time" not in p.meta and "dateModified" not in html:
         add("INFO", area, "no visible date or dateModified; fresh, dated pages are favoured for time-sensitive questions")
     # Same page as each AI bot: blocked by a firewall / bot protection?
+    if bots: bot_checked.add(area)
     for name, ua in (UA_BOTS.items() if bots else ()):
         bst, _, bhtml, _ = fetch(url, ua=ua)
         if bst != 200:
@@ -360,7 +434,7 @@ def main():
         try: old_report = open(a.compare, encoding="utf-8").read()
         except OSError as e: sys.exit(f"--compare {a.compare}: {e}")
     base ="{0.scheme}://{0.netloc}".format(urlparse(a.urls[0]))
-    sitemaps, _ = audit_robots(base)
+    sitemaps, robots_groups = audit_robots(base)
     sm_urls = audit_sitemap(base, sitemaps)
     audit_llms(base)
     audit_index(base, len(sm_urls))
@@ -374,7 +448,7 @@ def main():
         have = {norm(u) for u in pages}
         pages += [u for u in sm_urls[::step] if norm(u) not in have][: a.sample]
     for i, u in enumerate(pages):
-        audit_page(u, bots=i < 5)
+        audit_page(u, bots=i < 5, robots=robots_groups)
         if a.all: time.sleep(0.3)  # polite crawl
     order = {"FAIL": 0, "WARN": 1, "INFO": 2, "PASS": 3}
     counts = {k: sum(1 for r in results if r[0] == k) for k in order}

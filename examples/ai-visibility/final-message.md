@@ -6,8 +6,8 @@ and the account tasks wait for you. Nothing was deployed and nothing was billed.
 
 **Next steps**
 
-1. You: reply "run the panel" (30 calls on OpenAI, at most $0.90; two runs per
-   question is 60 calls, at most $1.80, and I recommend it).
+1. You: reply "run the panel" (30 calls on OpenAI, roughly $0.90; two runs per
+   question is 60 calls, roughly $1.80, not a spending cap, and I recommend it).
    Me: run it before anything is deployed, and show how often the assistants
    name Maison Lys, who they name instead, and which sources they cite.
 2. You: reply "deploy" (free).
