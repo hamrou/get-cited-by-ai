@@ -77,6 +77,14 @@ BASELINE = """1. Audit the live site by hand (see the top of this file) and save
 """
 
 
+def quote_description(s):
+    """YAML-quote the description: it holds ': ' and quotes that a parser may misread."""
+    m = re.search(r"^description: (.*)$", s, re.M)
+    assert m and not m.group(1).startswith('"')
+    val = m.group(1).replace("\\", "\\\\").replace('"', '\\"')
+    return s[:m.start(1)] + '"' + val + '"' + s[m.end(1):]
+
+
 def lite_skill():
     s = read(SRC / "SKILL.md")
     s = sub(s, "official Kimi/DeepSeek/Qwen retrieval checks, ", "")
@@ -92,6 +100,9 @@ def lite_skill():
     s = sub(s, "and run the billed panel locally in a\nsession when the reminder comes. Never put an API key in a scheduled prompt.",
             "and do the manual prompt check\nwhen the reminder comes. Never put an API key in a scheduled prompt.")
     s = re.sub(r"\n`ai-visibility/retrieval-<date>\.md` when official Kimi/DeepSeek/Qwen retrieval\nchecks are relevant, ", "\n", s)
+    s = quote_description(s)
+    s = sub(s, "check the build output instead: `curl` the local server or open `dist/index.html`\nand count the words outside `<script>`.",
+            "check the build output instead: fetch the local server's page or read `dist/index.html`\nand count the words outside `<script>`.")
     assert not re.search(r"audit\.py|panel\.py|--keys|--yes|--fetch-url|KIMI_SKILL_DIR|<this skill's folder>", s)
     return s
 
@@ -123,6 +134,7 @@ def main():
     meta["description"] = meta["description"].replace("AI-crawler audit, official retrieval checks, and fixes", "AI-crawler audit, prompt checks and fixes")
     (OUT / ".claude-plugin").mkdir()
     (OUT / ".claude-plugin" / "plugin.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    shutil.copyfile(ROOT / "tools" / "icon.png", OUT / ".claude-plugin" / "icon.png")
     for name in ("LICENSE",):
         if (ROOT / name).exists():
             shutil.copyfile(ROOT / name, OUT / name)

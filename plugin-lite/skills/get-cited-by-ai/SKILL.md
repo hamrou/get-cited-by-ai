@@ -1,6 +1,6 @@
 ---
 name: get-cited-by-ai
-description: Use when a website, SaaS, app, game, store or local business should be found, recommended or cited by AI assistants and answer engines (ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot, Google AI Overviews and AI Mode). Covers GEO (generative engine optimization), AEO (answer engine optimization), LLMO, AI SEO and AI search visibility; auditing a site for AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot), Chinese-language buyer prompts and content, robots.txt, Cloudflare bot blocking, JavaScript/SPA pages that AI bots can't read, server-side rendering and pre-rendering, sitemaps, IndexNow and Bing indexing, llms.txt, schema/JSON-LD, citable content, brand mentions on Reddit and YouTube, and tracking AI referral traffic in GA4. Triggers: "get cited by ChatGPT", "why doesn't ChatGPT recommend us", "show up in AI answers", "AI visibility audit", "rank in Perplexity", "show up on Kimi", "get cited by DeepSeek", "Qwen visibility", "优化 AI 搜索可见性", "optimize for AI Overviews", "add llms.txt".
+description: "Use when a website, SaaS, app, game, store or local business should be found, recommended or cited by AI assistants and answer engines (ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot, Google AI Overviews and AI Mode). Covers GEO (generative engine optimization), AEO (answer engine optimization), LLMO, AI SEO and AI search visibility; auditing a site for AI crawlers (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot), Chinese-language buyer prompts and content, robots.txt, Cloudflare bot blocking, JavaScript/SPA pages that AI bots can't read, server-side rendering and pre-rendering, sitemaps, IndexNow and Bing indexing, llms.txt, schema/JSON-LD, citable content, brand mentions on Reddit and YouTube, and tracking AI referral traffic in GA4. Triggers: \"get cited by ChatGPT\", \"why doesn't ChatGPT recommend us\", \"show up in AI answers\", \"AI visibility audit\", \"rank in Perplexity\", \"show up on Kimi\", \"get cited by DeepSeek\", \"Qwen visibility\", \"优化 AI 搜索可见性\", \"optimize for AI Overviews\", \"add llms.txt\"."
 ---
 
 # get-cited-by-ai
@@ -46,7 +46,7 @@ order. Sources: `references/evidence.md`.
 
 **Advice only?** If the user wants a plan, not changes, run Steps 0–1 and write
 `ai-visibility/plan.md`; skip the code. If the audit can't run (no live site yet),
-check the build output instead: `curl` the local server or open `dist/index.html`
+check the build output instead: fetch the local server's page or read `dist/index.html`
 and count the words outside `<script>`.
 
 ## Step 0: intake

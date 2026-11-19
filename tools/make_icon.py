@@ -2,7 +2,7 @@
 import pathlib
 from PIL import Image, ImageDraw, ImageFont
 
-out = pathlib.Path(__file__).resolve().parents[1] / "plugin-lite" / ".claude-plugin" / "icon.png"
+out = pathlib.Path(__file__).resolve().parents[1] / "tools" / "icon.png"
 S = 1024
 im = Image.new("RGB", (S, S), "#0f172a")
 d = ImageDraw.Draw(im)
