@@ -6,6 +6,8 @@ An evidence-based GEO (generative engine optimization) / AI SEO skill for Claude
 
 Most "AI SEO" advice starts with `llms.txt` and schema. The data says those barely move the needle. This skill starts with what does.
 
+![A run of get-cited-by-ai on a fictional shop: audit, then the next steps list](assets/demo.gif)
+
 ## Results so far
 
 Three live sites have been through the skill so far, all baseline audits, with the
@@ -161,6 +163,10 @@ npx skills add https://github.com/hamrou/get-cited-by-ai --skill get-cited-by-ai
 - No guaranteed results. It reports the numbers before and after.
 - Your DNS, CDN, webmaster and directory accounts stay yours: you log in, and it asks before every change.
 - It never runs the billed panel without your yes.
+
+## Contributing
+
+Issues and pull requests are welcome: see [`CONTRIBUTING.md`](CONTRIBUTING.md). The most useful reports are a wrong audit line with the URL, and a recommendation that has newer evidence against it.
 
 ## License
 
