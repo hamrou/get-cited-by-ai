@@ -6,6 +6,21 @@ An evidence-based GEO (generative engine optimization) / AI SEO skill for Claude
 
 Most "AI SEO" advice starts with `llms.txt` and schema. The data says those barely move the needle. This skill starts with what does.
 
+## Results so far
+
+Three live sites have been through the skill so far, all baseline audits, with the
+fixes written and held until the "before" prompt panel has run. No before-and-after
+panel numbers exist yet; they will be added here when they do, with the dates.
+
+| site | what the baseline audit found | what the run did |
+| --- | --- | --- |
+| A local beauty shop (server-rendered) | 0 fail, 10 warn: no canonical links, structured data on one page, no `llms.txt`, thin pickup and history pages | canonical links, store and product structured data, `llms.txt`, expanded pages |
+| A relocation service (3 languages, 291 URLs) | 1 fail, 4 warn: the bare `/` was an empty redirect with 5 words; sitemap dates all identical | a real home page; per-page `lastmod` from git; IndexNow on deploy |
+| A multilingual health-information app (1,415 URLs) | 0 fail, 4 warn, 26 pass: no Bing verification visible, one sitemap date, a 72-character home title | shorter home title, IndexNow, attribution |
+
+What each run also showed: for a new brand, the bottleneck is mentions on other
+sites, not the site itself. See a full sample run in [`examples/`](examples/).
+
 ## Quick start
 
 ```
@@ -33,6 +48,8 @@ You need Python 3.9 or newer (standard library only, nothing to install). The pr
 | `ai-visibility/plan.md` | fixes ranked reach → readable → quotable → off-site, with an owner for each |
 | `ai-visibility/facts-needed.md` | the facts only you have (ingredients, prices, reviews), as a short form |
 | code changes | canonical links, structured data, `llms.txt`, IndexNow, attribution, pages that answer the questions |
+
+See a complete sample, for a fictional shop, in [`examples/`](examples/).
 
 ## What actually gets you cited
 
