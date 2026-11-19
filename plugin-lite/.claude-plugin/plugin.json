@@ -1,0 +1,29 @@
+{
+  "name": "get-cited-by-ai",
+  "version": "1.4.0",
+  "description": "Get your site, app or business found and cited by ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot and Google AI Overviews. Evidence-based GEO / AI SEO: AI-crawler audit, prompt checks and fixes ranked by evidence.",
+  "author": {
+    "name": "hamrou",
+    "url": "https://github.com/hamrou"
+  },
+  "homepage": "https://github.com/hamrou/get-cited-by-ai",
+  "repository": "https://github.com/hamrou/get-cited-by-ai",
+  "license": "MIT",
+  "keywords": [
+    "geo",
+    "generative-engine-optimization",
+    "ai-seo",
+    "aeo",
+    "llmo",
+    "seo",
+    "chatgpt",
+    "perplexity",
+    "kimi",
+    "deepseek",
+    "qwen",
+    "ai-overviews",
+    "llms-txt",
+    "ai-crawlers",
+    "ai-visibility"
+  ]
+}
