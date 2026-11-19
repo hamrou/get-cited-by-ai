@@ -289,7 +289,8 @@ def audit_llms(base):
         add("FAIL", "llms.txt", "/llms.txt returns an HTML page (an SPA fallback?), not Markdown text; serve a real file or a 404")
     else:
         ok = body.lstrip().startswith("# ")
-        add("PASS" if ok else "WARN", "llms.txt", f"/llms.txt is text ({len(body)} chars){'' if ok else '; spec: start with an H1 \"# Name\" then a \"> summary\" line'}")
+        hint = "" if ok else '; spec: start with an H1 "# Name" then a "> summary" line'
+        add("PASS" if ok else "WARN", "llms.txt", f"/llms.txt is text ({len(body)} chars){hint}")
 
 
 def audit_page(url, bots=True):
