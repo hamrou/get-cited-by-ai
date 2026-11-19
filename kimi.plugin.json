@@ -1,0 +1,31 @@
+{
+  "name": "get-cited-by-ai",
+  "version": "1.4.0",
+  "description": "Audit and improve website visibility in ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek and Qwen with evidence-led content, official retrieval checks and prompt measurement.",
+  "skills": "./skills/",
+  "author": {
+    "name": "hamrou",
+    "url": "https://github.com/hamrou"
+  },
+  "homepage": "https://github.com/hamrou/get-cited-by-ai",
+  "license": "MIT",
+  "keywords": [
+    "geo",
+    "ai-seo",
+    "aeo",
+    "llmo",
+    "chatgpt",
+    "perplexity",
+    "kimi",
+    "deepseek",
+    "qwen",
+    "ai-visibility"
+  ],
+  "interface": {
+    "displayName": "Get Cited by AI",
+    "shortDescription": "Measure and improve citations across seven AI answer engines",
+    "longDescription": "Audit public pages, test official Kimi, DeepSeek and Qwen retrieval, create buyer-language prompt panels, improve citable content and track AI referrals. Billed API calls always require explicit approval.",
+    "developerName": "hamrou",
+    "websiteURL": "https://github.com/hamrou/get-cited-by-ai"
+  }
+}

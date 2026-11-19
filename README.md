@@ -2,7 +2,7 @@
 
 **Get your website, app or business found and cited by ChatGPT, Claude, Perplexity, Gemini, Kimi, DeepSeek, Qwen, Copilot and Google AI Overviews.**
 
-An evidence-based GEO (generative engine optimization) / AI SEO skill for Claude Code and other agents that read `SKILL.md`. It checks how AI crawlers actually see your site, measures what the assistants say about you today, fixes what the research supports, and tells you exactly what to do next. For Chinese-speaking audiences it creates Chinese buyer prompts and tests official Kimi, DeepSeek and Qwen search and page-retrieval APIs.
+An evidence-based GEO (generative engine optimization) / AI SEO skill for Kimi Code, Claude Code and other agents that read `SKILL.md`. It checks how AI crawlers actually see your site, measures what the assistants say about you today, fixes what the research supports, and tells you exactly what to do next. For Chinese-speaking audiences it creates Chinese buyer prompts and tests official Kimi, DeepSeek and Qwen search and page-retrieval APIs.
 
 Most "AI SEO" advice starts with `llms.txt` and schema. The data says those barely move the needle. This skill starts with what does.
 
@@ -25,12 +25,23 @@ sites, not the site itself. See a full sample run in [`examples/`](examples/).
 
 ## Quick start
 
-```
-/plugin marketplace add hamrou/get-cited-by-ai
-/plugin install get-cited-by-ai@get-cited-by-ai
+**Kimi Code** (native plugin):
+
+```text
+/plugins install https://github.com/hamrou/get-cited-by-ai
+/reload
+/skill:get-cited-by-ai:get-cited-by-ai
 ```
 
-Then, in your project, run `/get-cited-by-ai` (or ask *"why doesn't ChatGPT recommend us?"*). It:
+**Claude Code**:
+
+```text
+/plugin marketplace add hamrou/get-cited-by-ai
+/plugin install get-cited-by-ai@get-cited-by-ai
+/get-cited-by-ai
+```
+
+You can also ask naturally, for example *"why doesn't ChatGPT recommend us?"* or *"show up on Kimi, DeepSeek and Qwen"*. The skill:
 
 1. reads your repo and live site, and asks only for what it can't find;
 2. audits the site and asks the assistants your buyers' questions, **before** changing anything;
@@ -157,11 +168,22 @@ The default engines for this mode are Kimi, DeepSeek and Qwen. It writes `retrie
 
 ## Install
 
+**Kimi Code (native plugin, all projects for the current user)**
+
+```text
+/plugins install https://github.com/hamrou/get-cited-by-ai
+/reload
+/skill:get-cited-by-ai:get-cited-by-ai
+```
+
+Use `/plugins info get-cited-by-ai` to inspect the installation and diagnostics. To install a particular release, use its GitHub release URL. Plugin installation copies the repository into Kimi's managed plugins directory; reinstall to update it.
+
 **Claude Code (plugin marketplace)**
 
-```
+```text
 /plugin marketplace add hamrou/get-cited-by-ai
 /plugin install get-cited-by-ai@get-cited-by-ai
+/get-cited-by-ai
 ```
 
 **Skills CLI**
@@ -170,7 +192,7 @@ The default engines for this mode are Kimi, DeepSeek and Qwen. It writes `retrie
 npx skills add https://github.com/hamrou/get-cited-by-ai --skill get-cited-by-ai
 ```
 
-**Manual**: copy `skills/get-cited-by-ai/` into `~/.claude/skills/` (or your agent's skills folder).
+**Manual**: copy `skills/get-cited-by-ai/` into `~/.kimi-code/skills/` for Kimi Code, `~/.claude/skills/` for Claude Code, or your agent's skills folder. For project-only discovery, use `.kimi-code/skills/` or `.agents/skills/`.
 
 ## Rules it follows
 

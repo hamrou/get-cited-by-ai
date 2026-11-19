@@ -8,6 +8,7 @@ and check.
 
 | path | what it is |
 | --- | --- |
+| `kimi.plugin.json` | native Kimi Code plugin manifest; keep its version and metadata aligned with `.claude-plugin/` |
 | `skills/get-cited-by-ai/SKILL.md` | the skill: the steps an agent follows |
 | `skills/get-cited-by-ai/references/` | evidence, crawler list, stack recipes, measurement, browser tasks |
 | `skills/get-cited-by-ai/scripts/audit.py` | the site audit |
